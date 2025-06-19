@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  admin
+  staff
+}
+
+enum PaymentMethod {
+  Card
+  Cash
+}
+
+enum RoomStatus {
+  available
+  out_of_service
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+}
+
+// Core Tables
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  role         UserRole
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  // Relations
+  hotelUsers HotelUser[]
+
+  @@map("users")
+}
+
+model Hotel {
+  id                    String  @id @default(uuid()) @db.Uuid
+  name                  String  @db.VarChar(255)
+  location              String  @db.VarChar(255)
+  contactInfo           Json    @map("contact_info") @db.JsonB
+  policies              String? @db.Text
+  defaultCheckinTime    String? @map("default_checkin_time") @db.Time(6)
+  defaultCheckoutTime   String? @map("default_checkout_time") @db.Time(6)
+
+  // Relations
+  hotelUsers HotelUser[]
+  rooms      Room[]
+
+  @@map("hotel")
+}
+
+model HotelUser {
+  id      String @id @default(uuid()) @db.Uuid
+  userId  String @map("user_id") @db.Uuid
+  hotelId String @map("hotel_id") @db.Uuid
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, hotelId])
+  @@map("hotel_users_pivot")
+}
+
+model Room {
+  id          String     @id @default(uuid()) @db.Uuid
+  hotelId     String     @map("hotel_id") @db.Uuid
+  name        String     @unique @db.VarChar(255)
+  description String?    @db.Text
+  sizeSqm     Int?       @map("size_sqm")
+  bedSetup    String?    @map("bed_setup") @db.VarChar(100)
+  basePrice   Decimal    @map("base_price") @db.Decimal(10, 2)
+  maxCapacity Int        @map("max_capacity")
+  status      RoomStatus @default(available)
+  amenities   Json       @db.JsonB
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  // Relations
+  hotel        Hotel         @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
+  rateRules    RateRule[]
+  blockedDates BlockedDate[]
+  reviews      Review[]
+  roomPhotos   RoomPhoto[]
+
+  @@map("rooms")
+}
+
+model Booking {
+  id              String        @id @default(uuid()) @db.Uuid
+  roomId          String        @map("room_id") @db.Uuid
+  referenceNumber String        @unique @map("reference_number") @db.VarChar(20)
+  guestName       String        @map("guest_name") @db.VarChar(255)
+  guestContact    String        @map("guest_contact") @db.VarChar(15)
+  guestEmail      String        @map("guest_email") @db.VarChar(255)
+  checkInDate     DateTime      @map("check_in_date") @db.Date
+  checkOutDate    DateTime      @map("check_out_date") @db.Date
+  totalCost       Decimal       @map("total_cost") @db.Decimal(10, 2)
+  status          BookingStatus @default(pending)
+  source          String?       @db.VarChar(50)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  // Relations
+  room     Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  payments Payment[]
+  reviews  Review[]
+
+  @@map("bookings")
+}
+
+model Payment {
+  id            String        @id @default(uuid()) @db.Uuid
+  bookingId     String        @map("booking_id") @db.Uuid
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod @map("payment_method")
+  identifier    String?       @db.Text
+
+  // Relations
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("payment")
+}
+
+// Supporting Tables
+model RateRule {
+  id             String    @id @default(uuid()) @db.Uuid
+  roomId         String    @map("room_id") @db.Uuid
+  startDate      DateTime  @map("start_date") @db.Date
+  endDate        DateTime  @map("end_date") @db.Date
+  pricePerNight  Decimal   @map("price_per_night") @db.Decimal(10, 2)
+  minStayNights  Int?      @map("min_stay_nights")
+  dayOfWeek      Int[]     @map("day_of_week")
+  source         String?   @db.VarChar(50)
+
+  // Relations
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@map("rate_rules")
+}
+
+model BlockedDate {
+  id          String   @id @default(uuid()) @db.Uuid
+  roomId      String   @map("room_id") @db.Uuid
+  blockedDate DateTime @map("blocked_date") @db.Date
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  // Relations
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, blockedDate])
+  @@map("blocked_dates")
+}
+
+model Review {
+  id          String   @id @default(uuid()) @db.Uuid
+  bookingId   String   @unique @map("booking_id") @db.Uuid
+  roomId      String   @map("room_id") @db.Uuid
+  rating      Int
+  comment     String?  @db.Text
+  isPublished Boolean  @default(false) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  // Relations
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  room    Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+model RoomPhoto {
+  id        String @id @default(uuid()) @db.Uuid
+  roomId    String @map("room_id") @db.Uuid
+  imageUrl  String @map("image_url") @db.VarChar(255)
+  sortOrder Int    @map("sort_order")
+
+  // Relations
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@map("room_photos")
+}
