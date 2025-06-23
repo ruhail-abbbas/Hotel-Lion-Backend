@@ -49,7 +49,8 @@ model User {
   updated_at   DateTime  @updatedAt
 
   // Relationships
-  hotel_users  HotelUsersPivot[]
+  hotel_users     HotelUsersPivot[]
+  refresh_tokens  RefreshToken[]
 
   @@map("users")
 }
@@ -208,4 +209,18 @@ model Review {
   room    Room    @relation(fields: [room_id], references: [id], onDelete: Cascade)
 
   @@map("reviews")
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid()) @db.Uuid
+  token      String   @unique
+  user_id    String   @db.Uuid
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("refresh_tokens")
 }

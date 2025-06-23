@@ -46,6 +46,12 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 
 ## API Endpoints
 
+### Authentication
+- `POST /api/v1/auth/sign-in` – Login with credentials
+- `GET /api/v1/auth/me` – Get current user (JWT required)
+- `POST /api/v1/auth/refresh` – Refresh access token
+- `POST /api/v1/auth/sign-out` – Logout and invalidate tokens
+
 ### Public
 - `GET /api/v1/rooms` – List rooms
 - `GET /api/v1/rooms/:id` – Room details
@@ -69,13 +75,22 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 - `GET /api/v1/admin/cleaning-schedule?date=`
 - `POST /api/v1/admin/cleaning-schedule/send`
 
+### User Management (Admin only)
+- `POST /api/v1/admin/users` – Create new user
+- `GET /api/v1/admin/users` – List all users
+- `GET /api/v1/admin/users/:id` – Get user details
+- `PATCH /api/v1/admin/users/:id` – Update user
+- `DELETE /api/v1/admin/users/:id` – Delete user
+
 ## Key Workflows
 
-1. **Booking**: Search→Lock dates→Payment→Confirm→Send guides
-2. **Registration**: Email link→Form submission→Access code generation
-3. **Channel Sync**: Any booking blocks all channels instantly
-4. **Cleaning**: Daily 9:30AM query→WhatsApp to staff (multi-language)
-5. **Message Routing**: All channels→Owner's WhatsApp
+1. **Authentication**: Sign-in→JWT tokens→Protected access→Token refresh
+2. **User Management**: Create users via admin→Associate with hotels→Role-based access
+3. **Booking**: Search→Lock dates→Payment→Confirm→Send guides
+4. **Registration**: Email link→Form submission→Access code generation
+5. **Channel Sync**: Any booking blocks all channels instantly
+6. **Cleaning**: Daily 9:30AM query→WhatsApp to staff (multi-language)
+7. **Message Routing**: All channels→Owner's WhatsApp
 
 ## Environment Variables
 
@@ -106,9 +121,12 @@ JWT_SECRET=...
 - Money in cents (avoid decimals)
 - Pagination: limit/offset pattern
 - Response times: availability <100ms, booking <500ms
-- JWT auth on admin endpoints
+- JWT auth on admin endpoints (15 min access tokens, 7 day refresh)
 - Rate limiting on public endpoints
 - Webhook signature verification
+- Password hashing with bcrypt (10 salt rounds)
+- Role-based access control (admin/staff)
+- Refresh token rotation and cleanup
 
 ## Database
 
@@ -116,6 +134,25 @@ See `CLAUDE_DB.md` for schema details. Key points:
 - Prisma ORM with PostgreSQL
 - Soft deletes for audit trail
 - Indexes on booking dates, room availability
+
+## User Creation
+
+Since there's no public sign-up, users must be created via:
+1. Admin using the `/api/v1/admin/users` endpoint
+2. Database seed scripts for initial admin user
+3. Direct database insertion for first admin setup
+
+Example initial admin creation:
+```sql
+-- First, create a hotel
+INSERT INTO hotels (id, name, location) VALUES ('uuid-here', 'Hotel Lion', 'Your Location');
+
+-- Create admin user (password: 'admin123' hashed)
+INSERT INTO users (id, email, password_hash, role) VALUES ('uuid-here', 'admin@hotel-lion.com', '$2b$10$...', 'admin');
+
+-- Associate user with hotel
+INSERT INTO hotel_users_pivot (id, user_id, hotel_id) VALUES ('uuid-here', 'user-uuid', 'hotel-uuid');
+```
 
 ---
 
