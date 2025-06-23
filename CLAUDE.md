@@ -4,81 +4,119 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a NestJS-based backend application for the Hotel Lion project. It's a fresh NestJS TypeScript starter with minimal configuration and a basic controller/service architecture.
+NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel management. Key focus: direct bookings with lower prices than OTAs, automated operations, legal compliance.
+
+**Initial Rooms**: Y1A, Y1B, Y2, Y3A, Y3B, Y4, B1-B8
 
 ## Development Commands
 
-### Package Management
-- `pnpm install` - Install dependencies
-- `pnpm install <package>` - Add new package
-
-### Development Server
-- `pnpm run start:dev` - Start development server with watch mode (recommended for development)
-- `pnpm run start` - Start server without watch mode
-- `pnpm run start:debug` - Start with debug mode and watch
-- `pnpm run start:prod` - Start production server (requires build first)
-
-### Build and Compilation
-- `pnpm run build` - Build the application for production
-- Built files are output to `dist/` directory
-
-### Code Quality
-- `pnpm run lint` - Run ESLint with auto-fix
-- `pnpm run format` - Format code with Prettier
-- ESLint configured with TypeScript, Prettier integration, and custom rules (some TypeScript strict checks set to warn/off)
-- Prettier configured with single quotes and trailing commas
-
-### Testing
-- `pnpm run test` - Run unit tests
-- `pnpm run test:watch` - Run tests in watch mode
-- `pnpm run test:cov` - Run tests with coverage report
-- `pnpm run test:e2e` - Run end-to-end tests
-- `pnpm run test:debug` - Run tests in debug mode
-- `pnpm run test -- <test-name>` - Run specific test file
+* `pnpm run start:dev` – Dev server with hot reload
+* `pnpm run build` – Production build
+* `pnpm run lint` – ESLint
+* `pnpm run format` – Prettier
+* `pnpm run test` – Unit tests
+* `pnpm run test:e2e` – E2E tests
 
 ## Architecture
 
-### Project Structure
-- `src/` - Source code directory
-  - `main.ts` - Application entry point, bootstraps NestJS app on port 3000 (or PORT env var)
-  - `app.module.ts` - Root application module
-  - `app.controller.ts` - Main application controller with basic GET endpoint
-  - `app.service.ts` - Main application service with Hello World logic
-- `test/` - End-to-end test files
-- `dist/` - Compiled output directory (created after build)
+### Core Modules
 
-### NestJS Configuration
-- Uses CommonJS modules (`tsconfig.json`)
-- Decorators enabled for NestJS dependency injection
-- Source root configured as `src/` directory
-- TypeScript compilation target: ES2023
+**Rooms**: CRUD, image gallery, availability check, status management (available/out_of_service/cleaning)
 
-### Testing Setup
-- Jest for unit testing with ts-jest transformer
-- Supertest for e2e testing
-- Test files follow `*.spec.ts` pattern for unit tests
-- E2E tests in separate `test/` directory
-- Coverage reports generated to `coverage/` directory
+**Bookings**: Search, create with payment, confirmation flow, status: pending→confirmed, seat-locking
 
-## Key Dependencies
-- **Runtime**: @nestjs/common, @nestjs/core, @nestjs/platform-express, @prisma/client
-- **Database**: Prisma ORM with PostgreSQL
-- **API Documentation**: @nestjs/swagger, swagger-ui-express
-- **Development**: TypeScript, ESLint, Prettier, Jest
-- **Testing**: @nestjs/testing, supertest, ts-jest
+**Payments**: Stripe/PayPal integration, tokenized/webhook-based, idempotent processing
 
-## Database & Prisma
-- PostgreSQL database with Prisma ORM
-- Database name: `hotel_lion`
-- Connection configured via `DATABASE_URL` in .env
-- Schema defined in `prisma/schema.prisma`
-- Run `npx prisma migrate dev` to apply schema changes
-- Run `npx prisma generate` to update client types
+**Admin**:
+- Dashboard: stats, occupancy, check-ins/outs
+- Calendar: month grid (rooms×dates), click for details/actions
+- Bookings: list/filter/export CSV
+- Rooms: visual cards, modal editing
+- Prices: channel matrix (Website<Airbnb<Booking.com)
+- Customers: guest list, registration PDFs
+- Cleaning: 9:30AM auto-schedule, WhatsApp dispatch, staff management
 
-## API Documentation
-- Swagger UI available at `/api` when server is running
-- Automatically documents all endpoints with OpenAPI 3.0 specification
-- Includes tags for different API sections: hotels, rooms, bookings, payments, users
+**Channels**: Real-time 2-way sync (Airbnb/Booking.com), prevents double-booking
 
-## Port Configuration
-Application runs on port 3000 by default, configurable via `PORT` environment variable.
+**Notifications**: Email confirmations, WhatsApp (arrival guide, cleaning schedules), access codes
+
+**Registration**: Legal compliance form, generates room access code on completion
+
+**Communications**: Routes all channel messages to owner's WhatsApp
+
+## API Endpoints
+
+### Public
+- `GET /api/v1/rooms` – List rooms
+- `GET /api/v1/rooms/:id` – Room details
+- `GET /api/v1/rooms/availability?start=&end=`
+- `POST /api/v1/bookings/search` – Check availability/pricing
+- `POST /api/v1/bookings` – Create booking
+- `GET /api/v1/bookings/:ref` – Booking summary
+- `POST /api/v1/payments/stripe-intent`
+- `POST /api/v1/payments/paypal-order`
+- `POST /api/v1/payments/webhook`
+- `GET /api/v1/registration/:bookingRef` – Registration form
+- `POST /api/v1/registration/:bookingRef` – Submit registration
+
+### Admin (JWT-protected)
+- `GET /api/v1/admin/dashboard`
+- `GET /api/v1/admin/calendar?month=&year=`
+- `GET /api/v1/admin/bookings` + CRUD operations
+- `GET /api/v1/admin/rooms` + CRUD operations
+- `GET/PATCH /api/v1/admin/prices`
+- `GET /api/v1/admin/customers`
+- `GET /api/v1/admin/cleaning-schedule?date=`
+- `POST /api/v1/admin/cleaning-schedule/send`
+
+## Key Workflows
+
+1. **Booking**: Search→Lock dates→Payment→Confirm→Send guides
+2. **Registration**: Email link→Form submission→Access code generation
+3. **Channel Sync**: Any booking blocks all channels instantly
+4. **Cleaning**: Daily 9:30AM query→WhatsApp to staff (multi-language)
+5. **Message Routing**: All channels→Owner's WhatsApp
+
+## Environment Variables
+
+```
+DATABASE_URL=postgresql://...
+STRIPE_SECRET_KEY=...
+STRIPE_WEBHOOK_SECRET=...
+PAYPAL_CLIENT_ID=...
+WHATSAPP_API_KEY=...
+OWNER_WHATSAPP_NUMBER=...
+AIRBNB_API_KEY=...
+BOOKING_COM_API_KEY=...
+JWT_SECRET=...
+```
+
+## OpenAPI Integration
+
+**CRITICAL**: After API changes:
+1. OpenAPI spec auto-generates from NestJS decorators
+2. Access at `/api-json`
+3. Run `pnpm run generate:openapi` to export
+4. Commit `openapi.json` for frontend codegen
+
+## Technical Requirements
+
+- All DTOs use class-validator
+- Dates in ISO 8601 UTC
+- Money in cents (avoid decimals)
+- Pagination: limit/offset pattern
+- Response times: availability <100ms, booking <500ms
+- JWT auth on admin endpoints
+- Rate limiting on public endpoints
+- Webhook signature verification
+
+## Database
+
+See `CLAUDE_DB.md` for schema details. Key points:
+- Prisma ORM with PostgreSQL
+- Soft deletes for audit trail
+- Indexes on booking dates, room availability
+
+---
+
+> **Note**: Focus on backend implementation. Frontend is a separate repository.
