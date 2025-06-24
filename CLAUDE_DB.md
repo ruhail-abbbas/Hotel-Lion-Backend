@@ -104,7 +104,7 @@ Users ←→ Hotel_Users_Pivot ←→ Hotel → Rooms → Bookings → Payment
 
 ## Migrations & Prisma
 
-* Use `npx prisma migrate dev` to apply schema updates.
+* Use `npx prisma smigrate dev` to apply schema updates.
 * `schema.prisma` models mirror tables and enums above.
 * Enable `@updatedAt` for timestamp fields in Prisma.
 

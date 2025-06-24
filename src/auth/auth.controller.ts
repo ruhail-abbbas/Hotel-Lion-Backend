@@ -38,7 +38,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async signIn(
     @Body() signInDto: SignInDto,
-    @Request() req,
+    @Request() req: { user: User },
   ): Promise<AuthResponseDto> {
     return this.authService.signIn(req.user);
   }
@@ -60,7 +60,7 @@ export class AuthController {
   async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
     try {
       return await this.authService.refreshToken(refreshTokenDto.refresh_token);
-    } catch (error) {
+    } catch {
       throw new BadRequestException('Invalid refresh token');
     }
   }

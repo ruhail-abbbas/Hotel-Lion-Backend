@@ -8,8 +8,8 @@ async function bootstrap() {
   // Enable CORS
   app.enableCors({
     origin: [
-      'http://localhost:8000',  // Your frontend
-      'http://localhost:3000'   // Allow same origin
+      'http://localhost:3000', // Frontend Next.js
+      'http://localhost:8000', // Allow same origin
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -30,7 +30,7 @@ async function bootstrap() {
         bearerFormat: 'JWT',
         description: 'JWT Authorization header using the Bearer scheme.',
       },
-      'JWT-auth'
+      'JWT-auth',
     )
     .addTag('Authentication', 'User authentication and authorization')
     .addTag('User Management', 'Admin user management endpoints')
@@ -43,9 +43,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT ?? 3001;
+  const port = process.env.PORT ?? 8000;
   await app.listen(port);
   console.log(`🚀 Hotel Lion API running on http://localhost:${port}`);
   console.log(`📚 Swagger docs available at http://localhost:${port}/api`);
 }
-bootstrap();
+void bootstrap();

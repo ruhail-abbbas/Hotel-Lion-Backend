@@ -78,14 +78,17 @@ export class UsersService {
       },
     });
 
-    return users.map((user) => ({
-      id: user.id,
-      email: user.email,
-      phone: user.phone || undefined,
-      role: user.role,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
-    } as UserResponseDto));
+    return users.map(
+      (user) =>
+        ({
+          id: user.id,
+          email: user.email,
+          phone: user.phone || undefined,
+          role: user.role,
+          created_at: user.created_at,
+          updated_at: user.updated_at,
+        }) as UserResponseDto,
+    );
   }
 
   async findOne(id: string): Promise<UserResponseDto> {

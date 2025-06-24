@@ -68,6 +68,44 @@ async function main() {
   console.log('   Email: admin@hotel-lion.com');
   console.log('   Password: admin123');
   console.log('   Role: admin');
+
+  // Create initial rooms if they don't exist
+  const roomNames = ['Y1A', 'Y1B', 'Y2', 'Y3A', 'Y3B', 'Y4', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8'];
+  
+  for (const roomName of roomNames) {
+    const existingRoom = await prisma.room.findFirst({
+      where: { 
+        hotel_id: hotel.id,
+        name: roomName 
+      }
+    });
+
+    if (!existingRoom) {
+      await prisma.room.create({
+        data: {
+          hotel_id: hotel.id,
+          name: roomName,
+          description: `Room ${roomName} at Hotel Lion`,
+          size_sqm: roomName.startsWith('Y') ? 25 : 20, // Y rooms are slightly larger
+          bed_setup: roomName.startsWith('Y') ? 'King bed' : 'Queen bed',
+          base_price: roomName.startsWith('Y') ? 15000 : 12000, // Price in cents ($150 vs $120)
+          max_capacity: 2,
+          status: 'available',
+          amenities: {
+            wifi: true,
+            air_conditioning: true,
+            private_bathroom: true,
+            tv: true,
+            mini_fridge: true
+          }
+        }
+      });
+      console.log(`✅ Created room: ${roomName}`);
+    } else {
+      console.log(`🏠 Room already exists: ${roomName}`);
+    }
+  }
+
   console.log('🎉 Seed completed successfully!');
 }
 
