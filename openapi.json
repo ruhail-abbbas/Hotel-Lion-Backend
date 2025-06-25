@@ -384,6 +384,42 @@
           "User Management"
         ]
       }
+    },
+    "/api/v1/whatsapsedp/send-message": {
+      "post": {
+        "operationId": "WhatsAppController_sendMessage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message sent successfully"
+          },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Send WhatsApp message via Twilio",
+        "tags": [
+          "WhatsApp"
+        ]
+      }
     }
   },
   "info": {
@@ -400,6 +436,10 @@
     {
       "name": "User Management",
       "description": "Admin user management endpoints"
+    },
+    {
+      "name": "WhatsApp",
+      "description": "WhatsApp messaging via Twilio"
     },
     {
       "name": "hotels",
@@ -585,6 +625,25 @@
             "example": "+1234567890"
           }
         }
+      },
+      "SendMessageDto": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "description": "WhatsApp phone number in international format (without whatsapp: prefix)",
+            "example": "+1234567890"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message content to send",
+            "example": "Hello! Your booking confirmation is ready."
+          }
+        },
+        "required": [
+          "to",
+          "message"
+        ]
       }
     }
   }

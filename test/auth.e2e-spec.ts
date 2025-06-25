@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
@@ -68,7 +69,7 @@ describe('Authentication (e2e)', () => {
           password: 'password123',
         })
         .expect(200)
-        .expect((res) => {
+        .expect((res: any) => {
           expect(res.body).toHaveProperty('access_token');
           expect(res.body).toHaveProperty('refresh_token');
           expect(res.body).toHaveProperty('user');
@@ -117,7 +118,7 @@ describe('Authentication (e2e)', () => {
         .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: any) => {
           expect(res.body.email).toBe('test@example.com');
           expect(res.body.role).toBe('admin');
           expect(res.body).not.toHaveProperty('password_hash');
@@ -155,7 +156,7 @@ describe('Authentication (e2e)', () => {
         .post('/api/v1/auth/sign-out')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: any) => {
           expect(res.body.message).toBe('Signed out successfully');
         });
     });

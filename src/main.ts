@@ -34,6 +34,7 @@ async function bootstrap() {
     )
     .addTag('Authentication', 'User authentication and authorization')
     .addTag('User Management', 'Admin user management endpoints')
+    .addTag('WhatsApp', 'WhatsApp messaging via Twilio')
     .addTag('hotels', 'Hotel management endpoints')
     .addTag('rooms', 'Room inventory and availability')
     .addTag('bookings', 'Reservation management')

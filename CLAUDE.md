@@ -6,43 +6,59 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel management. Key focus: direct bookings with lower prices than OTAs, automated operations, legal compliance.
 
-**Initial Rooms**: Y1A, Y1B, Y2, Y3A, Y3B, Y4, B1-B8
+**Initial Rooms**: Y1A, Y1B, Y2, Y3A, Y3B, Y4, B1-B8 (14 rooms configured ✅)
+
+## Current Implementation Status
+
+✅ **Fully Implemented**: Authentication, User Management, Statistics, WhatsApp Integration, Database Schema  
+🚧 **Database Ready**: Rooms, Bookings, Payments, Admin Dashboard, Channel Integration  
+❌ **Not Started**: Public booking flow, Payment processing, Channel sync, Registration forms
 
 ## Development Commands
 
 * `pnpm run start:dev` – Dev server with hot reload
 * `pnpm run build` – Production build
-* `pnpm run lint` – ESLint
-* `pnpm run format` – Prettier
+* `pnpm run lint` – ESLint (with pre-push hook ✅)
+* `pnpm run format` – Prettier (with pre-push hook ✅)
 * `pnpm run test` – Unit tests
-* `pnpm run test:e2e` – E2E tests
+* `pnpm run test:e2e` – E2E tests (auth module ✅)
+* `pnpm run generate:openapi` – Export OpenAPI spec
+* `pnpm run db:seed` – Seed database with initial data ✅
 
 ## Architecture
 
 ### Core Modules
 
-**Rooms**: CRUD, image gallery, availability check, status management (available/out_of_service/cleaning)
+**Authentication** ✅: JWT-based auth with refresh tokens, role-based access control (admin/staff), secure token rotation
 
-**Bookings**: Search, create with payment, confirmation flow, status: pending→confirmed, seat-locking
+**User Management** ✅: Complete CRUD operations, admin-only endpoints, user-hotel associations, password hashing
 
-**Payments**: Stripe/PayPal integration, tokenized/webhook-based, idempotent processing
+**Statistics** ✅: Occupancy rate calculation, monthly revenue analysis, ADR tracking, booking trends (24-month history)
 
-**Admin**:
-- Dashboard: stats, occupancy, check-ins/outs
-- Calendar: month grid (rooms×dates), click for details/actions
-- Bookings: list/filter/export CSV
-- Rooms: visual cards, modal editing
-- Prices: channel matrix (Website<Airbnb<Booking.com)
-- Customers: guest list, registration PDFs
-- Cleaning: 9:30AM auto-schedule, WhatsApp dispatch, staff management
+**WhatsApp Integration** ✅: Twilio-based messaging, phone validation, error handling for sender configuration
 
-**Channels**: Real-time 2-way sync (Airbnb/Booking.com), prevents double-booking
+**Rooms** 🚧: CRUD, image gallery, availability check, status management (available/out_of_service/cleaning) - *Database ready, endpoints pending*
 
-**Notifications**: Email confirmations, WhatsApp (arrival guide, cleaning schedules), access codes
+**Bookings** 🚧: Search, create with payment, confirmation flow, status: pending→confirmed, seat-locking - *Database ready, endpoints pending*
 
-**Registration**: Legal compliance form, generates room access code on completion
+**Payments** 🚧: Stripe/PayPal integration, tokenized/webhook-based, idempotent processing - *Database ready, endpoints pending*
 
-**Communications**: Routes all channel messages to owner's WhatsApp
+**Admin** 🚧:
+- Dashboard: stats, occupancy, check-ins/outs - *Statistics API ready*
+- Calendar: month grid (rooms×dates), click for details/actions - *Database ready*
+- Bookings: list/filter/export CSV - *Database ready*
+- Rooms: visual cards, modal editing - *Database ready*
+- Prices: channel matrix (Website<Airbnb<Booking.com) - *Rate rules in database*
+- Customers: guest list, registration PDFs - *Database ready*
+- Cleaning: 9:30AM auto-schedule, WhatsApp dispatch, staff management - *WhatsApp integration ready*
+
+**Channels** 🚧: Real-time 2-way sync (Airbnb/Booking.com), prevents double-booking - *Database ready*
+
+**Notifications** 🚧: Email confirmations, WhatsApp (arrival guide, cleaning schedules), access codes - *WhatsApp integration ready*
+
+**Registration** 🚧: Legal compliance form, generates room access code on completion - *Database ready*
+
+**Communications** 🚧: Routes all channel messages to owner's WhatsApp - *WhatsApp integration ready*
 
 ## API Endpoints
 
@@ -75,12 +91,21 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 - `GET /api/v1/admin/cleaning-schedule?date=`
 - `POST /api/v1/admin/cleaning-schedule/send`
 
-### User Management (Admin only)
+### User Management (Admin only) ✅
 - `POST /api/v1/admin/users` – Create new user
 - `GET /api/v1/admin/users` – List all users
 - `GET /api/v1/admin/users/:id` – Get user details
 - `PATCH /api/v1/admin/users/:id` – Update user
 - `DELETE /api/v1/admin/users/:id` – Delete user
+
+### Statistics (Admin only) ✅ *NEW*
+- `GET /api/v1/admin/stats/occupancy-rate?start=&end=` – Calculate occupancy percentage
+- `GET /api/v1/admin/stats/monthly-revenue?year=` – Monthly revenue breakdown
+- `GET /api/v1/admin/stats/average-daily-rate?start=&end=` – ADR calculation
+- `GET /api/v1/admin/stats/booking-trends?months=` – Booking trends analysis
+
+### WhatsApp Integration ✅ *NEW*
+- `POST /api/v1/whatsapp/send-message` – Send WhatsApp message via Twilio
 
 ## Key Workflows
 
@@ -95,15 +120,28 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 ## Environment Variables
 
 ```
+# Database
 DATABASE_URL=postgresql://...
+
+# Authentication
+JWT_SECRET=...
+
+# Payments (not yet implemented)
 STRIPE_SECRET_KEY=...
 STRIPE_WEBHOOK_SECRET=...
 PAYPAL_CLIENT_ID=...
-WHATSAPP_API_KEY=...
-OWNER_WHATSAPP_NUMBER=...
+
+# WhatsApp Integration (via Twilio) ✅
+TWILIO_ACCOUNT_SID=...
+TWILIO_AUTH_TOKEN=...
+TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
+
+# Channel Integrations (not yet implemented)
 AIRBNB_API_KEY=...
 BOOKING_COM_API_KEY=...
-JWT_SECRET=...
+
+# General
+OWNER_WHATSAPP_NUMBER=...
 ```
 
 ## OpenAPI Integration

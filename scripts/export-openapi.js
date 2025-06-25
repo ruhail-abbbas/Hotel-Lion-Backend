@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 async function exportOpenAPI() {
-  const port = process.env.PORT || process.argv[2] || '3000';
+  const port = process.env.PORT || process.argv[2] || '8000';
   const baseUrl = process.env.API_URL || `http://localhost:${port}`;
   
   try {
