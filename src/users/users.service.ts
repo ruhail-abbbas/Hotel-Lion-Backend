@@ -140,7 +140,12 @@ export class UsersService {
       }
     }
 
-    const updateData: any = {
+    const updateData: {
+      email?: string;
+      role?: string;
+      phone?: string;
+      password_hash?: string;
+    } = {
       email: updateUserDto.email,
       role: updateUserDto.role,
       phone: updateUserDto.phone,
