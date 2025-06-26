@@ -139,3 +139,47 @@ export class BookingTrendsDto {
   })
   growth_percentage: number;
 }
+
+export class CheckInsTodayDto {
+  @ApiProperty({
+    description: 'Date for check-ins',
+    example: '2025-01-15',
+  })
+  date: string;
+
+  @ApiProperty({
+    description: 'Total number of check-ins today',
+    example: 5,
+  })
+  total_checkins: number;
+
+  @ApiProperty({
+    description: 'List of check-in details',
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        booking_id: { type: 'string', example: 'booking-uuid' },
+        reference_number: { type: 'string', example: 'HLN-20250115-001' },
+        guest_name: { type: 'string', example: 'John Doe' },
+        guest_email: { type: 'string', example: 'john@example.com' },
+        room_name: { type: 'string', example: 'Y1A' },
+        check_in_date: { type: 'string', example: '2025-01-15' },
+        check_out_date: { type: 'string', example: '2025-01-18' },
+        total_cost: { type: 'number', example: 36000 },
+        nights: { type: 'number', example: 3 },
+      },
+    },
+  })
+  checkins: Array<{
+    booking_id: string;
+    reference_number: string;
+    guest_name: string;
+    guest_email: string;
+    room_name: string;
+    check_in_date: string;
+    check_out_date: string;
+    total_cost: number;
+    nights: number;
+  }>;
+}

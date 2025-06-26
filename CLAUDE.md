@@ -103,6 +103,7 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 - `GET /api/v1/admin/stats/monthly-revenue?year=` – Monthly revenue breakdown
 - `GET /api/v1/admin/stats/average-daily-rate?start=&end=` – ADR calculation
 - `GET /api/v1/admin/stats/booking-trends?months=` – Booking trends analysis
+- `GET /api/v1/admin/stats/checkins-today?date=` – Today's check-ins list
 
 ### WhatsApp Integration ✅ *NEW*
 - `POST /api/v1/whatsapp/send-message` – Send WhatsApp message via Twilio

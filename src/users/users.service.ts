@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from '../auth/dto/auth-response.dto';
+import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -142,7 +143,7 @@ export class UsersService {
 
     const updateData: {
       email?: string;
-      role?: string;
+      role?: UserRole;
       phone?: string;
       password_hash?: string;
     } = {

@@ -5,6 +5,7 @@ import {
   MonthlyRevenueDto,
   AverageDailyRateDto,
   BookingTrendsDto,
+  CheckInsTodayDto,
 } from './dto/stats-response.dto';
 
 @Injectable()
@@ -278,5 +279,67 @@ export class StatsService {
     }
 
     return results;
+  }
+
+  async getCheckInsToday(
+    hotelId: string,
+    date?: string,
+  ): Promise<CheckInsTodayDto> {
+    // Use provided date or default to today
+    const targetDate = date ? new Date(date) : new Date();
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Get all confirmed bookings with check-in date on the target date
+    const checkInBookings = await this.prisma.booking.findMany({
+      where: {
+        room: { hotel_id: hotelId },
+        status: 'confirmed',
+        check_in_date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+      include: {
+        room: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        check_in_date: 'asc',
+      },
+    });
+
+    // Calculate nights for each booking
+    const checkins = checkInBookings.map((booking) => {
+      const checkIn = new Date(booking.check_in_date);
+      const checkOut = new Date(booking.check_out_date);
+      const nights = Math.ceil(
+        (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      return {
+        booking_id: booking.id,
+        reference_number: booking.reference_number,
+        guest_name: booking.guest_name,
+        guest_email: booking.guest_email,
+        room_name: booking.room.name,
+        check_in_date: booking.check_in_date.toISOString().split('T')[0],
+        check_out_date: booking.check_out_date.toISOString().split('T')[0],
+        total_cost: booking.total_cost,
+        nights,
+      };
+    });
+
+    return {
+      date: targetDate.toISOString().split('T')[0],
+      total_checkins: checkins.length,
+      checkins,
+    };
   }
 }

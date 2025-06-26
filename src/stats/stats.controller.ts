@@ -18,6 +18,7 @@ import {
   MonthlyRevenueDto,
   AverageDailyRateDto,
   BookingTrendsDto,
+  CheckInsTodayDto,
 } from './dto/stats-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -248,6 +249,49 @@ export class StatsController {
     }
 
     return this.statsService.getBookingTrends(hotelId, monthsNum);
+  }
+
+  @Get('checkins-today')
+  @ApiOperation({
+    summary: 'Get check-ins for today (or specified date)',
+    description:
+      'Get list of all confirmed bookings with check-in date on today or specified date',
+  })
+  @ApiQuery({
+    name: 'hotel_id',
+    description: 'Hotel UUID',
+    required: true,
+    type: 'string',
+  })
+  @ApiQuery({
+    name: 'date',
+    description:
+      'Date to check (YYYY-MM-DD). Defaults to today if not provided',
+    required: false,
+    type: 'string',
+    example: '2025-01-15',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Check-ins for the specified date',
+    type: CheckInsTodayDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid parameters' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+  async getCheckInsToday(
+    @Query('hotel_id') hotelId: string,
+    @Query('date') date?: string,
+  ): Promise<CheckInsTodayDto> {
+    if (!hotelId) {
+      throw new BadRequestException('hotel_id is required');
+    }
+
+    if (date && !this.isValidDate(date)) {
+      throw new BadRequestException('Invalid date format. Use YYYY-MM-DD');
+    }
+
+    return this.statsService.getCheckInsToday(hotelId, date);
   }
 
   private isValidDate(dateString: string): boolean {
