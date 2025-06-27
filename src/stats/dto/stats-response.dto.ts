@@ -183,3 +183,47 @@ export class CheckInsTodayDto {
     nights: number;
   }>;
 }
+
+export class CheckOutsTodayDto {
+  @ApiProperty({
+    description: 'Date for check-outs',
+    example: '2025-01-15',
+  })
+  date: string;
+
+  @ApiProperty({
+    description: 'Total number of check-outs today',
+    example: 3,
+  })
+  total_checkouts: number;
+
+  @ApiProperty({
+    description: 'List of check-out details',
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        booking_id: { type: 'string', example: 'booking-uuid' },
+        reference_number: { type: 'string', example: 'HLN-20250115-001' },
+        guest_name: { type: 'string', example: 'John Doe' },
+        guest_email: { type: 'string', example: 'john@example.com' },
+        room_name: { type: 'string', example: 'Y1A' },
+        check_in_date: { type: 'string', example: '2025-01-12' },
+        check_out_date: { type: 'string', example: '2025-01-15' },
+        total_cost: { type: 'number', example: 36000 },
+        nights: { type: 'number', example: 3 },
+      },
+    },
+  })
+  checkouts: Array<{
+    booking_id: string;
+    reference_number: string;
+    guest_name: string;
+    guest_email: string;
+    room_name: string;
+    check_in_date: string;
+    check_out_date: string;
+    total_cost: number;
+    nights: number;
+  }>;
+}
