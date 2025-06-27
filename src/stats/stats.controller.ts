@@ -19,6 +19,8 @@ import {
   AverageDailyRateDto,
   BookingTrendsDto,
   CheckInsTodayDto,
+  HotelRoomsStatusDto,
+  CustomersListDto,
   CheckOutsTodayDto,
 } from './dto/stats-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -293,6 +295,79 @@ export class StatsController {
     }
 
     return this.statsService.getCheckInsToday(hotelId, date);
+  }
+
+  @Get('rooms-status')
+  @ApiOperation({
+    summary: 'Get status of all rooms with booking details',
+    description:
+      'Get current status of all rooms including booking information for occupied rooms',
+  })
+  @ApiQuery({
+    name: 'hotel_id',
+    description: 'Hotel UUID',
+    required: true,
+    type: 'string',
+  })
+  @ApiQuery({
+    name: 'date',
+    description:
+      'Date to check (YYYY-MM-DD). Defaults to today if not provided',
+    required: false,
+    type: 'string',
+    example: '2025-01-15',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Room status information with booking details',
+    type: HotelRoomsStatusDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid parameters' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+  async getRoomsStatus(
+    @Query('hotel_id') hotelId: string,
+    @Query('date') date?: string,
+  ): Promise<HotelRoomsStatusDto> {
+    if (!hotelId) {
+      throw new BadRequestException('hotel_id is required');
+    }
+
+    if (date && !this.isValidDate(date)) {
+      throw new BadRequestException('Invalid date format. Use YYYY-MM-DD');
+    }
+
+    return this.statsService.getRoomsStatus(hotelId, date);
+  }
+
+  @Get('customers')
+  @ApiOperation({
+    summary: 'Get all customers with their booking history',
+    description:
+      'Get comprehensive list of all customers with booking details, spending totals, and statistics',
+  })
+  @ApiQuery({
+    name: 'hotel_id',
+    description: 'Hotel UUID',
+    required: true,
+    type: 'string',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Customer list with booking history and statistics',
+    type: CustomersListDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid parameters' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+  async getCustomers(
+    @Query('hotel_id') hotelId: string,
+  ): Promise<CustomersListDto> {
+    if (!hotelId) {
+      throw new BadRequestException('hotel_id is required');
+    }
+
+    return this.statsService.getCustomers(hotelId);
   }
 
   @Get('checkouts-today')

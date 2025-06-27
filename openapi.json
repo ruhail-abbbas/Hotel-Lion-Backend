@@ -420,6 +420,464 @@
           "WhatsApp"
         ]
       }
+    },
+    "/api/v1/admin/stats/occupancy-rate": {
+      "get": {
+        "description": "Calculate occupancy rate as percentage of occupied vs available room nights",
+        "operationId": "StatsController_getOccupancyRate",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "required": true,
+            "in": "query",
+            "description": "Start date (YYYY-MM-DD)",
+            "schema": {
+              "example": "2025-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "end_date",
+            "required": true,
+            "in": "query",
+            "description": "End date (YYYY-MM-DD)",
+            "schema": {
+              "example": "2025-01-31",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Occupancy rate statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OccupancyRateDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid date format or parameters"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get occupancy rate for a date range",
+        "tags": [
+          "Statistics"
+        ]
+      }
+    },
+    "/api/v1/admin/stats/monthly-revenue": {
+      "get": {
+        "description": "Get total revenue, booking count, and average booking value for a specific month",
+        "operationId": "StatsController_getMonthlyRevenue",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "year",
+            "required": true,
+            "in": "query",
+            "description": "Year (YYYY)",
+            "schema": {
+              "example": 2025,
+              "type": "number"
+            }
+          },
+          {
+            "name": "month",
+            "required": true,
+            "in": "query",
+            "description": "Month (1-12)",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Monthly revenue statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthlyRevenueDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get monthly revenue statistics",
+        "tags": [
+          "Statistics"
+        ]
+      }
+    },
+    "/api/v1/admin/stats/average-daily-rate": {
+      "get": {
+        "description": "Calculate ADR as total revenue divided by occupied room nights",
+        "operationId": "StatsController_getAverageDailyRate",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "required": true,
+            "in": "query",
+            "description": "Start date (YYYY-MM-DD)",
+            "schema": {
+              "example": "2025-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "end_date",
+            "required": true,
+            "in": "query",
+            "description": "End date (YYYY-MM-DD)",
+            "schema": {
+              "example": "2025-01-31",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Average Daily Rate statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AverageDailyRateDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid date format or parameters"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get Average Daily Rate (ADR) for a date range",
+        "tags": [
+          "Statistics"
+        ]
+      }
+    },
+    "/api/v1/admin/stats/booking-trends": {
+      "get": {
+        "description": "Get booking statistics and growth trends for the specified number of months",
+        "operationId": "StatsController_getBookingTrends",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "months",
+            "required": false,
+            "in": "query",
+            "description": "Number of months to include (default: 6)",
+            "schema": {
+              "example": 6,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking trends statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BookingTrendsDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get booking trends over multiple months",
+        "tags": [
+          "Statistics"
+        ]
+      }
+    },
+    "/api/v1/admin/stats/checkins-today": {
+      "get": {
+        "description": "Get list of all confirmed bookings with check-in date on today or specified date",
+        "operationId": "StatsController_getCheckInsToday",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": false,
+            "in": "query",
+            "description": "Date to check (YYYY-MM-DD). Defaults to today if not provided",
+            "schema": {
+              "example": "2025-01-15",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Check-ins for the specified date",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckInsTodayDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get check-ins for today (or specified date)",
+        "tags": [
+          "Statistics"
+        ]
+      }
+    },
+    "/api/v1/admin/stats/rooms-status": {
+      "get": {
+        "description": "Get current status of all rooms including booking information for occupied rooms",
+        "operationId": "StatsController_getRoomsStatus",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": false,
+            "in": "query",
+            "description": "Date to check (YYYY-MM-DD). Defaults to today if not provided",
+            "schema": {
+              "example": "2025-01-15",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Room status information with booking details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HotelRoomsStatusDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get status of all rooms with booking details",
+        "tags": [
+          "Statistics"
+        ]
+      }
+    },
+    "/api/v1/admin/stats/customers": {
+      "get": {
+        "description": "Get comprehensive list of all customers with booking details, spending totals, and statistics",
+        "operationId": "StatsController_getCustomers",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer list with booking history and statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomersListDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all customers with their booking history",
+        "tags": [
+          "Statistics"
+        ]
+      }
+    },
+    "/api/v1/rooms": {
+      "get": {
+        "description": "Get a list of all available rooms for booking with details and photos",
+        "operationId": "RoomsController_getAllRooms",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of available rooms",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomsListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          }
+        },
+        "summary": "Get all available rooms",
+        "tags": [
+          "Rooms"
+        ]
+      }
     }
   },
   "info": {
@@ -643,6 +1101,714 @@
         "required": [
           "to",
           "message"
+        ]
+      },
+      "OccupancyRateDto": {
+        "type": "object",
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "description": "Start date for the period",
+            "example": "2025-01-01"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "End date for the period",
+            "example": "2025-01-31"
+          },
+          "total_room_nights": {
+            "type": "number",
+            "description": "Total number of available room nights",
+            "example": 480
+          },
+          "occupied_room_nights": {
+            "type": "number",
+            "description": "Number of occupied room nights",
+            "example": 312
+          },
+          "occupancy_rate": {
+            "type": "number",
+            "description": "Occupancy rate as percentage",
+            "example": 65
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date",
+          "total_room_nights",
+          "occupied_room_nights",
+          "occupancy_rate"
+        ]
+      },
+      "MonthlyRevenueDto": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "description": "Year and month",
+            "example": "2025-01"
+          },
+          "total_revenue": {
+            "type": "number",
+            "description": "Total revenue for the month in cents",
+            "example": 125000
+          },
+          "total_revenue_dollars": {
+            "type": "number",
+            "description": "Total revenue for the month in dollars",
+            "example": 1250
+          },
+          "booking_count": {
+            "type": "number",
+            "description": "Number of bookings",
+            "example": 25
+          },
+          "average_booking_value": {
+            "type": "number",
+            "description": "Average booking value in cents",
+            "example": 5000
+          }
+        },
+        "required": [
+          "month",
+          "total_revenue",
+          "total_revenue_dollars",
+          "booking_count",
+          "average_booking_value"
+        ]
+      },
+      "AverageDailyRateDto": {
+        "type": "object",
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "description": "Start date for the period",
+            "example": "2025-01-01"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "End date for the period",
+            "example": "2025-01-31"
+          },
+          "total_revenue": {
+            "type": "number",
+            "description": "Total revenue in cents",
+            "example": 125000
+          },
+          "occupied_room_nights": {
+            "type": "number",
+            "description": "Number of occupied room nights",
+            "example": 312
+          },
+          "adr_cents": {
+            "type": "number",
+            "description": "Average daily rate in cents",
+            "example": 4006
+          },
+          "adr_dollars": {
+            "type": "number",
+            "description": "Average daily rate in dollars",
+            "example": 40.06
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date",
+          "total_revenue",
+          "occupied_room_nights",
+          "adr_cents",
+          "adr_dollars"
+        ]
+      },
+      "BookingTrendsDto": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "description": "Month in YYYY-MM format",
+            "example": "2025-01"
+          },
+          "total_bookings": {
+            "type": "number",
+            "description": "Total bookings for the month",
+            "example": 25
+          },
+          "confirmed_bookings": {
+            "type": "number",
+            "description": "Confirmed bookings",
+            "example": 23
+          },
+          "cancelled_bookings": {
+            "type": "number",
+            "description": "Cancelled bookings",
+            "example": 2
+          },
+          "pending_bookings": {
+            "type": "number",
+            "description": "Pending bookings",
+            "example": 0
+          },
+          "growth_percentage": {
+            "type": "number",
+            "description": "Month-over-month growth percentage",
+            "example": 12.5
+          }
+        },
+        "required": [
+          "month",
+          "total_bookings",
+          "confirmed_bookings",
+          "cancelled_bookings",
+          "pending_bookings",
+          "growth_percentage"
+        ]
+      },
+      "CheckInsTodayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date for check-ins",
+            "example": "2025-01-15"
+          },
+          "total_checkins": {
+            "type": "number",
+            "description": "Total number of check-ins today",
+            "example": 5
+          },
+          "checkins": {
+            "type": "array",
+            "description": "List of check-in details",
+            "items": {
+              "type": "object",
+              "properties": {
+                "booking_id": {
+                  "type": "string",
+                  "example": "booking-uuid"
+                },
+                "reference_number": {
+                  "type": "string",
+                  "example": "HLN-20250115-001"
+                },
+                "guest_name": {
+                  "type": "string",
+                  "example": "John Doe"
+                },
+                "guest_email": {
+                  "type": "string",
+                  "example": "john@example.com"
+                },
+                "room_name": {
+                  "type": "string",
+                  "example": "Y1A"
+                },
+                "check_in_date": {
+                  "type": "string",
+                  "example": "2025-01-15"
+                },
+                "check_out_date": {
+                  "type": "string",
+                  "example": "2025-01-18"
+                },
+                "total_cost": {
+                  "type": "number",
+                  "example": 36000
+                },
+                "nights": {
+                  "type": "number",
+                  "example": 3
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "date",
+          "total_checkins",
+          "checkins"
+        ]
+      },
+      "RoomStatusDto": {
+        "type": "object",
+        "properties": {
+          "room_id": {
+            "type": "string",
+            "description": "Room ID",
+            "example": "room-uuid"
+          },
+          "room_name": {
+            "type": "string",
+            "description": "Room name",
+            "example": "Y1A"
+          },
+          "room_description": {
+            "type": "string",
+            "description": "Room description",
+            "example": "Cozy single room with city view"
+          },
+          "max_capacity": {
+            "type": "number",
+            "description": "Maximum capacity",
+            "example": 2
+          },
+          "base_price": {
+            "type": "number",
+            "description": "Base price per night in cents",
+            "example": 12000
+          },
+          "room_status": {
+            "type": "string",
+            "description": "Room status",
+            "enum": [
+              "available",
+              "out_of_service",
+              "cleaning"
+            ],
+            "example": "available"
+          },
+          "booking_status": {
+            "type": "string",
+            "description": "Current booking status",
+            "enum": [
+              "available",
+              "occupied",
+              "checking_in_today",
+              "checking_out_today"
+            ],
+            "example": "occupied"
+          },
+          "booking": {
+            "type": "object",
+            "description": "Current booking details (null if room is not booked)",
+            "nullable": true,
+            "properties": {
+              "booking_id": {
+                "type": "string",
+                "example": "booking-uuid"
+              },
+              "reference_number": {
+                "type": "string",
+                "example": "HLN-20250115-001"
+              },
+              "guest_name": {
+                "type": "string",
+                "example": "John Doe"
+              },
+              "guest_email": {
+                "type": "string",
+                "example": "john@example.com"
+              },
+              "guest_contact": {
+                "type": "string",
+                "example": "+1234567890"
+              },
+              "check_in_date": {
+                "type": "string",
+                "example": "2025-01-15"
+              },
+              "check_out_date": {
+                "type": "string",
+                "example": "2025-01-18"
+              },
+              "total_cost": {
+                "type": "number",
+                "example": 36000
+              },
+              "nights": {
+                "type": "number",
+                "example": 3
+              },
+              "booking_status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "confirmed",
+                  "cancelled"
+                ],
+                "example": "confirmed"
+              }
+            }
+          }
+        },
+        "required": [
+          "room_id",
+          "room_name",
+          "room_description",
+          "max_capacity",
+          "base_price",
+          "room_status",
+          "booking_status",
+          "booking"
+        ]
+      },
+      "HotelRoomsStatusDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date for the status check",
+            "example": "2025-01-15"
+          },
+          "hotel_id": {
+            "type": "string",
+            "description": "Hotel ID",
+            "example": "hotel-uuid"
+          },
+          "total_rooms": {
+            "type": "number",
+            "description": "Total number of rooms",
+            "example": 14
+          },
+          "available_rooms": {
+            "type": "number",
+            "description": "Number of available rooms",
+            "example": 8
+          },
+          "occupied_rooms": {
+            "type": "number",
+            "description": "Number of occupied rooms",
+            "example": 5
+          },
+          "out_of_service_rooms": {
+            "type": "number",
+            "description": "Number of rooms out of service",
+            "example": 1
+          },
+          "cleaning_rooms": {
+            "type": "number",
+            "description": "Number of rooms being cleaned",
+            "example": 0
+          },
+          "rooms": {
+            "description": "List of all rooms with their current status",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoomStatusDto"
+            }
+          }
+        },
+        "required": [
+          "date",
+          "hotel_id",
+          "total_rooms",
+          "available_rooms",
+          "occupied_rooms",
+          "out_of_service_rooms",
+          "cleaning_rooms",
+          "rooms"
+        ]
+      },
+      "CustomerBookingDto": {
+        "type": "object",
+        "properties": {
+          "booking_id": {
+            "type": "string",
+            "description": "Booking ID",
+            "example": "booking-uuid"
+          },
+          "reference_number": {
+            "type": "string",
+            "description": "Booking reference number",
+            "example": "HLN-20250115-001"
+          },
+          "room_name": {
+            "type": "string",
+            "description": "Room name",
+            "example": "Y1A"
+          },
+          "check_in_date": {
+            "type": "string",
+            "description": "Check-in date",
+            "example": "2025-01-15"
+          },
+          "check_out_date": {
+            "type": "string",
+            "description": "Check-out date",
+            "example": "2025-01-18"
+          },
+          "total_cost": {
+            "type": "number",
+            "description": "Total cost in cents",
+            "example": 36000
+          },
+          "total_cost_dollars": {
+            "type": "number",
+            "description": "Total cost in dollars",
+            "example": 360
+          },
+          "nights": {
+            "type": "number",
+            "description": "Number of nights",
+            "example": 3
+          },
+          "status": {
+            "type": "string",
+            "description": "Booking status",
+            "enum": [
+              "pending",
+              "confirmed",
+              "cancelled"
+            ],
+            "example": "confirmed"
+          },
+          "source": {
+            "type": "string",
+            "description": "Booking source",
+            "example": "Website"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Booking creation date",
+            "example": "2025-01-10T10:30:00Z"
+          }
+        },
+        "required": [
+          "booking_id",
+          "reference_number",
+          "room_name",
+          "check_in_date",
+          "check_out_date",
+          "total_cost",
+          "total_cost_dollars",
+          "nights",
+          "status",
+          "source",
+          "created_at"
+        ]
+      },
+      "CustomerDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Customer email (unique identifier)",
+            "example": "john.doe@example.com"
+          },
+          "name": {
+            "type": "string",
+            "description": "Customer name",
+            "example": "John Doe"
+          },
+          "contact": {
+            "type": "string",
+            "description": "Customer contact number",
+            "example": "+1234567890"
+          },
+          "total_bookings": {
+            "type": "number",
+            "description": "Total number of bookings",
+            "example": 3
+          },
+          "total_spent": {
+            "type": "number",
+            "description": "Total amount spent in cents",
+            "example": 108000
+          },
+          "total_spent_dollars": {
+            "type": "number",
+            "description": "Total amount spent in dollars",
+            "example": 1080
+          },
+          "first_booking_date": {
+            "type": "string",
+            "description": "Date of first booking",
+            "example": "2024-06-15T14:20:00Z"
+          },
+          "last_booking_date": {
+            "type": "string",
+            "description": "Date of last booking",
+            "example": "2025-01-10T10:30:00Z"
+          },
+          "bookings": {
+            "description": "List of all customer bookings",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerBookingDto"
+            }
+          }
+        },
+        "required": [
+          "email",
+          "name",
+          "contact",
+          "total_bookings",
+          "total_spent",
+          "total_spent_dollars",
+          "first_booking_date",
+          "last_booking_date",
+          "bookings"
+        ]
+      },
+      "CustomersListDto": {
+        "type": "object",
+        "properties": {
+          "hotel_id": {
+            "type": "string",
+            "description": "Hotel ID",
+            "example": "hotel-uuid"
+          },
+          "total_customers": {
+            "type": "number",
+            "description": "Total number of customers",
+            "example": 25
+          },
+          "total_bookings": {
+            "type": "number",
+            "description": "Total bookings across all customers",
+            "example": 78
+          },
+          "total_revenue": {
+            "type": "number",
+            "description": "Total revenue from all customers in cents",
+            "example": 2340000
+          },
+          "total_revenue_dollars": {
+            "type": "number",
+            "description": "Total revenue from all customers in dollars",
+            "example": 23400
+          },
+          "customers": {
+            "description": "List of all customers with their bookings",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerDto"
+            }
+          }
+        },
+        "required": [
+          "hotel_id",
+          "total_customers",
+          "total_bookings",
+          "total_revenue",
+          "total_revenue_dollars",
+          "customers"
+        ]
+      },
+      "RoomPhotoDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Photo ID",
+            "example": "photo-uuid"
+          },
+          "image_url": {
+            "type": "string",
+            "description": "Image URL",
+            "example": "https://example.com/images/room-y1a-1.jpg"
+          },
+          "sort_order": {
+            "type": "number",
+            "description": "Sort order for displaying photos",
+            "example": 1
+          }
+        },
+        "required": [
+          "id",
+          "image_url",
+          "sort_order"
+        ]
+      },
+      "RoomListDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Room ID",
+            "example": "room-uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Room name",
+            "example": "Y1A"
+          },
+          "description": {
+            "type": "string",
+            "description": "Room description",
+            "example": "Cozy single room with city view and modern amenities"
+          },
+          "size_sqm": {
+            "type": "number",
+            "description": "Room size in square meters",
+            "example": 25
+          },
+          "bed_setup": {
+            "type": "string",
+            "description": "Bed setup description",
+            "example": "1 Queen Bed"
+          },
+          "base_price": {
+            "type": "number",
+            "description": "Base price per night in cents",
+            "example": 12000
+          },
+          "base_price_dollars": {
+            "type": "number",
+            "description": "Base price per night in dollars",
+            "example": 120
+          },
+          "max_capacity": {
+            "type": "number",
+            "description": "Maximum guest capacity",
+            "example": 2
+          },
+          "amenities": {
+            "type": "object",
+            "description": "Room amenities (JSON data as stored in database)",
+            "example": [
+              "WiFi",
+              "Air Conditioning",
+              "TV",
+              "Private Bathroom",
+              "Mini Fridge"
+            ]
+          },
+          "photos": {
+            "description": "Room photos",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoomPhotoDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "size_sqm",
+          "bed_setup",
+          "base_price",
+          "base_price_dollars",
+          "max_capacity",
+          "amenities",
+          "photos"
+        ]
+      },
+      "RoomsListResponseDto": {
+        "type": "object",
+        "properties": {
+          "hotel_id": {
+            "type": "string",
+            "description": "Hotel ID",
+            "example": "hotel-uuid"
+          },
+          "total_rooms": {
+            "type": "number",
+            "description": "Total number of rooms",
+            "example": 14
+          },
+          "rooms": {
+            "description": "List of all rooms",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoomListDto"
+            }
+          }
+        },
+        "required": [
+          "hotel_id",
+          "total_rooms",
+          "rooms"
         ]
       }
     }

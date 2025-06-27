@@ -5,6 +5,8 @@
       "Bash(pnpm add:*)",
       "Bash(mkdir:*)",
       "Bash(pnpm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm run:*)",
       "Bash(sudo apt:*)",
       "Bash(sudo apt install:*)"
     ],

@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 import { StatsModule } from './stats/stats.module';
+import { RoomsModule } from './rooms/rooms.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { StatsModule } from './stats/stats.module';
     UsersModule,
     WhatsAppModule,
     StatsModule,
+    RoomsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

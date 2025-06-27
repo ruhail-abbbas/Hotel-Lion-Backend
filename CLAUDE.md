@@ -37,7 +37,7 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 
 **WhatsApp Integration** ✅: Twilio-based messaging, phone validation, error handling for sender configuration
 
-**Rooms** 🚧: CRUD, image gallery, availability check, status management (available/out_of_service/cleaning) - *Database ready, endpoints pending*
+**Rooms** 🚧: CRUD, image gallery, availability check, status management (available/out_of_service/cleaning) - *Database ready, public listing ✅, other endpoints pending*
 
 **Bookings** 🚧: Search, create with payment, confirmation flow, status: pending→confirmed, seat-locking - *Database ready, endpoints pending*
 
@@ -69,17 +69,17 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 - `POST /api/v1/auth/sign-out` – Logout and invalidate tokens
 
 ### Public
-- `GET /api/v1/rooms` – List rooms
-- `GET /api/v1/rooms/:id` – Room details
-- `GET /api/v1/rooms/availability?start=&end=`
-- `POST /api/v1/bookings/search` – Check availability/pricing
-- `POST /api/v1/bookings` – Create booking
-- `GET /api/v1/bookings/:ref` – Booking summary
-- `POST /api/v1/payments/stripe-intent`
-- `POST /api/v1/payments/paypal-order`
-- `POST /api/v1/payments/webhook`
-- `GET /api/v1/registration/:bookingRef` – Registration form
-- `POST /api/v1/registration/:bookingRef` – Submit registration
+- `GET /api/v1/rooms?hotel_id=` – List all available rooms ✅
+- `GET /api/v1/rooms/:id` – Room details 🚧
+- `GET /api/v1/rooms/availability?start=&end=` – Check availability 🚧
+- `POST /api/v1/bookings/search` – Check availability/pricing 🚧
+- `POST /api/v1/bookings` – Create booking 🚧
+- `GET /api/v1/bookings/:ref` – Booking summary 🚧
+- `POST /api/v1/payments/stripe-intent` – Payment processing 🚧
+- `POST /api/v1/payments/paypal-order` – Payment processing 🚧
+- `POST /api/v1/payments/webhook` – Payment webhooks 🚧
+- `GET /api/v1/registration/:bookingRef` – Registration form 🚧
+- `POST /api/v1/registration/:bookingRef` – Submit registration 🚧
 
 ### Admin (JWT-protected)
 - `GET /api/v1/admin/dashboard`
@@ -104,6 +104,7 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 - `GET /api/v1/admin/stats/average-daily-rate?start=&end=` – ADR calculation
 - `GET /api/v1/admin/stats/booking-trends?months=` – Booking trends analysis
 - `GET /api/v1/admin/stats/checkins-today?date=` – Today's check-ins list
+- `GET /api/v1/admin/stats/rooms-status?date=` – Room status with booking details
 
 ### WhatsApp Integration ✅ *NEW*
 - `POST /api/v1/whatsapp/send-message` – Send WhatsApp message via Twilio
