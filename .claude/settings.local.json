@@ -4,7 +4,18 @@
       "Bash(grep:*)",
       "Bash(pnpm add:*)",
       "Bash(mkdir:*)",
-      "Bash(pnpm run:*)"
+      "Bash(pnpm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm run:*)",
+      "Bash(sudo apt:*)",
+      "Bash(sudo apt install:*)",
+      "Bash(curl:*)",
+      "Bash(npx prisma db execute:*)",
+      "Bash(node:*)",
+      "Bash(rm:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(npx prisma db seed:*)",
+      "Bash(psql:*)"
     ],
     "deny": []
   }
