@@ -573,16 +573,40 @@ export class StatsService {
     // Calculate summary statistics
     const totalCustomers = customers.length;
     const totalBookings = bookings.length;
-    const totalRevenue = bookings
-      .filter((b) => b.status === 'confirmed')
-      .reduce((sum, booking) => sum + booking.total_cost, 0);
+
+    // Calculate total revenue (including all bookings to match individual customer totals)
+    const totalRevenue = bookings.reduce(
+      (sum, booking) => sum + booking.total_cost,
+      0,
+    );
+
+    // Also calculate confirmed revenue separately for transparency
+    // const confirmedRevenue = bookings
+    //   .filter((b) => b.status === 'confirmed')
+    //   .reduce((sum, booking) => sum + booking.total_cost, 0);
+
+    // Calculate returning customers (customers with more than 1 booking)
+    const returningCustomers = customers.filter(
+      (customer) => customer.total_bookings > 1,
+    ).length;
+    const returningCustomersPercentage =
+      totalCustomers > 0 ? (returningCustomers / totalCustomers) * 100 : 0;
+
+    // Calculate average customer value based on total revenue to match individual customer calculations
+    const averageCustomerValue =
+      totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
 
     return {
       hotel_id: hotelId,
       total_customers: totalCustomers,
+      returning_customers: returningCustomers,
+      returning_customers_percentage:
+        Math.round(returningCustomersPercentage * 100) / 100, // Round to 2 decimal places
       total_bookings: totalBookings,
       total_revenue: totalRevenue,
       total_revenue_dollars: totalRevenue / 100,
+      average_customer_value: Math.round(averageCustomerValue),
+      average_customer_value_dollars: Math.round(averageCustomerValue) / 100,
       customers,
     };
   }

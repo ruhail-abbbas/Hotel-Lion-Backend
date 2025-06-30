@@ -843,6 +843,63 @@
         ]
       }
     },
+    "/api/v1/admin/stats/checkouts-today": {
+      "get": {
+        "description": "Get list of all confirmed bookings with check-out date on today or specified date",
+        "operationId": "StatsController_getCheckOutsToday",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": false,
+            "in": "query",
+            "description": "Date to check (YYYY-MM-DD). Defaults to today if not provided",
+            "schema": {
+              "example": "2025-01-15",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Check-outs for the specified date",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckOutsTodayDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get check-outs for today (or specified date)",
+        "tags": [
+          "Statistics"
+        ]
+      }
+    },
     "/api/v1/rooms": {
       "get": {
         "description": "Get a list of all available rooms for booking with details and photos",
@@ -876,6 +933,282 @@
         "summary": "Get all available rooms",
         "tags": [
           "Rooms"
+        ]
+      }
+    },
+    "/api/v1/rooms/calendar": {
+      "get": {
+        "description": "Get a calendar view of all rooms with their bookings for a specified time period (e.g., 7 days, 30 days, 60 days)",
+        "operationId": "RoomsController_getRoomCalendar",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "days",
+            "required": false,
+            "in": "query",
+            "description": "Number of days to include in the calendar (e.g., 7 for 1 week, 30 for 1 month)",
+            "schema": {
+              "example": 30,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Room calendar with bookings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomCalendarResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          }
+        },
+        "summary": "Get room calendar with bookings",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/api/v1/rooms/{id}/status": {
+      "patch": {
+        "description": "Update room status to available, out_of_service, or cleaning",
+        "operationId": "RoomsController_updateRoomStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Room UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Room status update details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoomStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Room status updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomStatusResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "404": {
+            "description": "Room not found"
+          }
+        },
+        "summary": "Update room status",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/api/v1/bookings": {
+      "get": {
+        "description": "Get a list of all bookings for a hotel with guest and room details",
+        "operationId": "BookingsController_getAllBookings",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all bookings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingsListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          }
+        },
+        "summary": "Get all bookings",
+        "tags": [
+          "Bookings"
+        ]
+      },
+      "post": {
+        "description": "Create a new booking with room availability validation and automatic reference number generation",
+        "operationId": "BookingsController_createBooking",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Booking details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Booking created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data or room not found"
+          },
+          "409": {
+            "description": "Room not available for selected dates"
+          }
+        },
+        "summary": "Create a new booking",
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/admin/hotels/{id}": {
+      "get": {
+        "description": "Get detailed information about a specific hotel",
+        "operationId": "HotelsController_getHotel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hotel details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HotelResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "Hotel not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get hotel details",
+        "tags": [
+          "Hotels"
+        ]
+      },
+      "patch": {
+        "description": "Update hotel identity and booking rules including contact info, check-in/out times, policies, currency, and tax rate",
+        "operationId": "HotelsController_updateHotel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Hotel update details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHotelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Hotel updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HotelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "Hotel not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update hotel details",
+        "tags": [
+          "Hotels"
         ]
       }
     }
@@ -1652,6 +1985,16 @@
             "description": "Total number of customers",
             "example": 25
           },
+          "returning_customers": {
+            "type": "number",
+            "description": "Number of returning customers (customers with more than 1 booking)",
+            "example": 8
+          },
+          "returning_customers_percentage": {
+            "type": "number",
+            "description": "Percentage of returning customers",
+            "example": 32
+          },
           "total_bookings": {
             "type": "number",
             "description": "Total bookings across all customers",
@@ -1667,6 +2010,16 @@
             "description": "Total revenue from all customers in dollars",
             "example": 23400
           },
+          "average_customer_value": {
+            "type": "number",
+            "description": "Average customer lifetime value in cents",
+            "example": 93600
+          },
+          "average_customer_value_dollars": {
+            "type": "number",
+            "description": "Average customer lifetime value in dollars",
+            "example": 936
+          },
           "customers": {
             "description": "List of all customers with their bookings",
             "type": "array",
@@ -1678,10 +2031,79 @@
         "required": [
           "hotel_id",
           "total_customers",
+          "returning_customers",
+          "returning_customers_percentage",
           "total_bookings",
           "total_revenue",
           "total_revenue_dollars",
+          "average_customer_value",
+          "average_customer_value_dollars",
           "customers"
+        ]
+      },
+      "CheckOutsTodayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date for check-outs",
+            "example": "2025-01-15"
+          },
+          "total_checkouts": {
+            "type": "number",
+            "description": "Total number of check-outs today",
+            "example": 3
+          },
+          "checkouts": {
+            "type": "array",
+            "description": "List of check-out details",
+            "items": {
+              "type": "object",
+              "properties": {
+                "booking_id": {
+                  "type": "string",
+                  "example": "booking-uuid"
+                },
+                "reference_number": {
+                  "type": "string",
+                  "example": "HLN-20250115-001"
+                },
+                "guest_name": {
+                  "type": "string",
+                  "example": "John Doe"
+                },
+                "guest_email": {
+                  "type": "string",
+                  "example": "john@example.com"
+                },
+                "room_name": {
+                  "type": "string",
+                  "example": "Y1A"
+                },
+                "check_in_date": {
+                  "type": "string",
+                  "example": "2025-01-12"
+                },
+                "check_out_date": {
+                  "type": "string",
+                  "example": "2025-01-15"
+                },
+                "total_cost": {
+                  "type": "number",
+                  "example": 36000
+                },
+                "nights": {
+                  "type": "number",
+                  "example": 3
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "date",
+          "total_checkouts",
+          "checkouts"
         ]
       },
       "RoomPhotoDto": {
@@ -1810,6 +2232,566 @@
           "total_rooms",
           "rooms"
         ]
+      },
+      "BookingDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Booking ID",
+            "example": "booking-uuid"
+          },
+          "reference_number": {
+            "type": "string",
+            "description": "Booking reference number",
+            "example": "BK-2024-001"
+          },
+          "guest_name": {
+            "type": "string",
+            "description": "Guest name",
+            "example": "John Doe"
+          },
+          "guest_email": {
+            "type": "string",
+            "description": "Guest email",
+            "example": "john.doe@example.com"
+          },
+          "check_in_date": {
+            "type": "string",
+            "description": "Check-in date",
+            "example": "2024-01-15"
+          },
+          "check_out_date": {
+            "type": "string",
+            "description": "Check-out date",
+            "example": "2024-01-18"
+          },
+          "status": {
+            "type": "string",
+            "description": "Booking status",
+            "example": "confirmed"
+          },
+          "total_cost": {
+            "type": "number",
+            "description": "Total cost in cents",
+            "example": 36000
+          },
+          "total_cost_dollars": {
+            "type": "number",
+            "description": "Total cost in dollars",
+            "example": 360
+          }
+        },
+        "required": [
+          "id",
+          "reference_number",
+          "guest_name",
+          "guest_email",
+          "check_in_date",
+          "check_out_date",
+          "status",
+          "total_cost",
+          "total_cost_dollars"
+        ]
+      },
+      "RoomCalendarDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Room ID",
+            "example": "room-uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Room name",
+            "example": "Y1A"
+          },
+          "status": {
+            "type": "string",
+            "description": "Room status",
+            "example": "available"
+          },
+          "bookings": {
+            "description": "Room bookings within the date range",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookingDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status",
+          "bookings"
+        ]
+      },
+      "RoomCalendarResponseDto": {
+        "type": "object",
+        "properties": {
+          "hotel_id": {
+            "type": "string",
+            "description": "Hotel ID",
+            "example": "hotel-uuid"
+          },
+          "start_date": {
+            "type": "string",
+            "description": "Start date of the calendar period",
+            "example": "2024-01-01"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "End date of the calendar period",
+            "example": "2024-01-31"
+          },
+          "days": {
+            "type": "number",
+            "description": "Number of days in the period",
+            "example": 30
+          },
+          "total_rooms": {
+            "type": "number",
+            "description": "Total number of rooms",
+            "example": 14
+          },
+          "rooms": {
+            "description": "List of all rooms with their bookings",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoomCalendarDto"
+            }
+          }
+        },
+        "required": [
+          "hotel_id",
+          "start_date",
+          "end_date",
+          "days",
+          "total_rooms",
+          "rooms"
+        ]
+      },
+      "UpdateRoomStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Room status",
+            "enum": [
+              "available",
+              "out_of_service",
+              "cleaning"
+            ],
+            "example": "out_of_service"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional notes about the status change",
+            "example": "Room taken out of service for maintenance - air conditioning repair",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "RoomStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Room ID",
+            "example": "room-uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Room name",
+            "example": "Y1A"
+          },
+          "previous_status": {
+            "type": "string",
+            "description": "Previous room status",
+            "enum": [
+              "available",
+              "out_of_service",
+              "cleaning"
+            ],
+            "example": "available"
+          },
+          "new_status": {
+            "type": "string",
+            "description": "New room status",
+            "enum": [
+              "available",
+              "out_of_service",
+              "cleaning"
+            ],
+            "example": "out_of_service"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Status change notes",
+            "example": "Room taken out of service for maintenance - air conditioning repair"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp when status was updated",
+            "example": "2025-06-30T11:15:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "previous_status",
+          "new_status",
+          "updated_at"
+        ]
+      },
+      "BookingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Booking ID",
+            "example": "booking-uuid"
+          },
+          "reference_number": {
+            "type": "string",
+            "description": "Booking reference number",
+            "example": "BK-2024-001"
+          },
+          "room_id": {
+            "type": "string",
+            "description": "Room ID",
+            "example": "room-uuid"
+          },
+          "room_name": {
+            "type": "string",
+            "description": "Room name",
+            "example": "Y1A"
+          },
+          "guest_name": {
+            "type": "string",
+            "description": "Guest name",
+            "example": "John Doe"
+          },
+          "guest_contact": {
+            "type": "string",
+            "description": "Guest contact (optional)",
+            "example": "+1234567890"
+          },
+          "guest_email": {
+            "type": "string",
+            "description": "Guest email",
+            "example": "john.doe@example.com"
+          },
+          "check_in_date": {
+            "type": "string",
+            "description": "Check-in date",
+            "example": "2024-01-15"
+          },
+          "check_out_date": {
+            "type": "string",
+            "description": "Check-out date",
+            "example": "2024-01-18"
+          },
+          "status": {
+            "type": "string",
+            "description": "Booking status",
+            "example": "confirmed",
+            "enum": [
+              "pending",
+              "confirmed",
+              "cancelled"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "description": "Booking source (optional)",
+            "example": "Website"
+          },
+          "total_cost": {
+            "type": "number",
+            "description": "Total cost in cents",
+            "example": 36000
+          },
+          "total_cost_dollars": {
+            "type": "number",
+            "description": "Total cost in dollars",
+            "example": 360
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Booking creation date",
+            "example": "2024-01-10T10:30:00.000Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Booking last update date",
+            "example": "2024-01-10T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "reference_number",
+          "room_id",
+          "room_name",
+          "guest_name",
+          "guest_email",
+          "check_in_date",
+          "check_out_date",
+          "status",
+          "total_cost",
+          "total_cost_dollars",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "BookingsListResponseDto": {
+        "type": "object",
+        "properties": {
+          "hotel_id": {
+            "type": "string",
+            "description": "Hotel ID",
+            "example": "hotel-uuid"
+          },
+          "total_bookings": {
+            "type": "number",
+            "description": "Total number of bookings",
+            "example": 25
+          },
+          "total_revenue": {
+            "type": "number",
+            "description": "Total revenue from all bookings in cents",
+            "example": 125000
+          },
+          "total_revenue_dollars": {
+            "type": "number",
+            "description": "Total revenue from all bookings in dollars",
+            "example": 1250
+          },
+          "bookings": {
+            "description": "List of all bookings",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookingResponseDto"
+            }
+          }
+        },
+        "required": [
+          "hotel_id",
+          "total_bookings",
+          "total_revenue",
+          "total_revenue_dollars",
+          "bookings"
+        ]
+      },
+      "CreateBookingDto": {
+        "type": "object",
+        "properties": {
+          "room_id": {
+            "type": "string",
+            "description": "Room ID to book",
+            "example": "room-uuid"
+          },
+          "guest_name": {
+            "type": "string",
+            "description": "Guest full name",
+            "example": "John Doe",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "guest_contact": {
+            "type": "string",
+            "description": "Guest contact number (optional)",
+            "example": "+1234567890"
+          },
+          "guest_email": {
+            "type": "string",
+            "description": "Guest email address",
+            "example": "john.doe@example.com"
+          },
+          "check_in_date": {
+            "type": "string",
+            "description": "Check-in date (YYYY-MM-DD)",
+            "example": "2024-01-15"
+          },
+          "check_out_date": {
+            "type": "string",
+            "description": "Check-out date (YYYY-MM-DD)",
+            "example": "2024-01-18"
+          },
+          "total_cost": {
+            "type": "number",
+            "description": "Total cost in cents",
+            "example": 36000,
+            "minimum": 1
+          },
+          "source": {
+            "type": "string",
+            "description": "Booking source (optional)",
+            "example": "Website",
+            "maxLength": 50
+          }
+        },
+        "required": [
+          "room_id",
+          "guest_name",
+          "guest_email",
+          "check_in_date",
+          "check_out_date",
+          "total_cost"
+        ]
+      },
+      "ContactInfoDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "description": "Hotel phone number",
+            "example": "+1 555-0199"
+          },
+          "email": {
+            "type": "string",
+            "description": "Hotel email address",
+            "example": "info@hotellion.com"
+          },
+          "website": {
+            "type": "string",
+            "description": "Hotel website URL",
+            "example": "https://hotellion.com"
+          }
+        }
+      },
+      "HotelResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Hotel ID",
+            "example": "hotel-uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Hotel name",
+            "example": "Hotel Lion"
+          },
+          "location": {
+            "type": "string",
+            "description": "Hotel location",
+            "example": "123 Boutique Street, City Center"
+          },
+          "contact_info": {
+            "description": "Hotel contact information",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContactInfoDto"
+              }
+            ]
+          },
+          "default_checkin_time": {
+            "type": "string",
+            "description": "Default check-in time",
+            "example": "15:00"
+          },
+          "default_checkout_time": {
+            "type": "string",
+            "description": "Default check-out time",
+            "example": "11:00"
+          },
+          "policies": {
+            "type": "string",
+            "description": "Hotel policies",
+            "example": "Cancellation allowed up to 24 hours before arrival. No smoking in rooms."
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code",
+            "example": "USD"
+          },
+          "tax_rate": {
+            "type": "number",
+            "description": "Tax rate percentage",
+            "example": 10
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Hotel creation date",
+            "example": "2024-01-01T10:00:00.000Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Hotel last update date",
+            "example": "2025-06-30T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "location",
+          "contact_info",
+          "default_checkin_time",
+          "default_checkout_time",
+          "policies",
+          "currency",
+          "tax_rate",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdateHotelDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Hotel name",
+            "example": "Hotel Lion",
+            "maxLength": 100
+          },
+          "location": {
+            "type": "string",
+            "description": "Hotel address/location",
+            "example": "123 Boutique Street, City Center",
+            "maxLength": 200
+          },
+          "contact_info": {
+            "description": "Hotel contact information",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContactInfoDto"
+              }
+            ]
+          },
+          "default_checkin_time": {
+            "type": "string",
+            "description": "Default check-in time (HH:MM format)",
+            "example": "15:00"
+          },
+          "default_checkout_time": {
+            "type": "string",
+            "description": "Default check-out time (HH:MM format)",
+            "example": "11:00"
+          },
+          "policies": {
+            "type": "string",
+            "description": "Hotel policies and booking rules",
+            "example": "Cancellation allowed up to 24 hours before arrival. No smoking in rooms. Pets allowed with prior arrangement.",
+            "maxLength": 2000
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code",
+            "example": "USD"
+          },
+          "tax_rate": {
+            "type": "number",
+            "description": "Tax rate percentage",
+            "example": 10,
+            "minimum": 0,
+            "maximum": 100
+          }
+        }
       }
     }
   }

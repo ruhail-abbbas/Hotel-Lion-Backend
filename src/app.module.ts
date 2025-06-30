@@ -8,6 +8,8 @@ import { UsersModule } from './users/users.module';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 import { StatsModule } from './stats/stats.module';
 import { RoomsModule } from './rooms/rooms.module';
+import { BookingsModule } from './bookings/bookings.module';
+import { HotelsModule } from './hotels/hotels.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { RoomsModule } from './rooms/rooms.module';
     WhatsAppModule,
     StatsModule,
     RoomsModule,
+    BookingsModule,
+    HotelsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

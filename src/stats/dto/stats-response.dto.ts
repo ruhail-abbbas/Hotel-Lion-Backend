@@ -453,6 +453,19 @@ export class CustomersListDto {
   total_customers: number;
 
   @ApiProperty({
+    description:
+      'Number of returning customers (customers with more than 1 booking)',
+    example: 8,
+  })
+  returning_customers: number;
+
+  @ApiProperty({
+    description: 'Percentage of returning customers',
+    example: 32.0,
+  })
+  returning_customers_percentage: number;
+
+  @ApiProperty({
     description: 'Total bookings across all customers',
     example: 78,
   })
@@ -469,6 +482,18 @@ export class CustomersListDto {
     example: 23400.0,
   })
   total_revenue_dollars: number;
+
+  @ApiProperty({
+    description: 'Average customer lifetime value in cents',
+    example: 93600,
+  })
+  average_customer_value: number;
+
+  @ApiProperty({
+    description: 'Average customer lifetime value in dollars',
+    example: 936.0,
+  })
+  average_customer_value_dollars: number;
 
   @ApiProperty({
     description: 'List of all customers with their bookings',
