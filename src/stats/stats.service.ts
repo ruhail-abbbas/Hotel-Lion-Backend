@@ -10,6 +10,8 @@ import {
   RoomStatusDto,
   CustomersListDto,
   CheckOutsTodayDto,
+  YearlyCalendarDto,
+  MonthlyOccupancyDto,
 } from './dto/stats-response.dto';
 
 @Injectable()
@@ -668,6 +670,137 @@ export class StatsService {
       date: targetDate.toISOString().split('T')[0],
       total_checkouts: checkouts.length,
       checkouts,
+    };
+  }
+
+  async getYearlyCalendar(
+    hotelId: string,
+    year: number,
+  ): Promise<YearlyCalendarDto> {
+    // Get total rooms for the hotel
+    const totalRooms = await this.prisma.room.count({
+      where: { hotel_id: hotelId },
+    });
+
+    const monthlyData: MonthlyOccupancyDto[] = [];
+    let totalYearlyRevenue = 0;
+    let totalOccupancySum = 0;
+
+    // Month names for the DTO
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    // Process each month
+    for (let month = 1; month <= 12; month++) {
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0, 23, 59, 59);
+
+      // Calculate days in month
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const totalRoomNights = totalRooms * daysInMonth;
+
+      // Get bookings for this month that overlap with any day in the month
+      const bookings = await this.prisma.booking.findMany({
+        where: {
+          room: { hotel_id: hotelId },
+          status: 'confirmed',
+          OR: [
+            {
+              check_in_date: { gte: startDate, lte: endDate },
+            },
+            {
+              check_out_date: { gte: startDate, lte: endDate },
+            },
+            {
+              AND: [
+                { check_in_date: { lte: startDate } },
+                { check_out_date: { gte: endDate } },
+              ],
+            },
+          ],
+        },
+      });
+
+      // Calculate occupied room nights for this month
+      let occupiedRoomNights = 0;
+      let monthlyRevenue = 0;
+
+      bookings.forEach((booking) => {
+        const checkIn = new Date(
+          Math.max(booking.check_in_date.getTime(), startDate.getTime()),
+        );
+        const checkOut = new Date(
+          Math.min(booking.check_out_date.getTime(), endDate.getTime()),
+        );
+        const nights = Math.ceil(
+          (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        occupiedRoomNights += Math.max(0, nights);
+
+        // For revenue, only count bookings that start in this month
+        if (
+          booking.check_in_date >= startDate &&
+          booking.check_in_date <= endDate
+        ) {
+          monthlyRevenue += booking.total_cost;
+        }
+      });
+
+      // Calculate occupancy rate
+      const occupancyRate =
+        totalRoomNights > 0 ? (occupiedRoomNights / totalRoomNights) * 100 : 0;
+
+      // Count total bookings that start in this month
+      const monthlyBookings = await this.prisma.booking.count({
+        where: {
+          room: { hotel_id: hotelId },
+          check_in_date: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+      });
+
+      monthlyData.push({
+        month,
+        month_name: monthNames[month - 1],
+        year_month: `${year}-${month.toString().padStart(2, '0')}`,
+        total_room_nights: totalRoomNights,
+        occupied_room_nights: occupiedRoomNights,
+        occupancy_rate: Math.round(occupancyRate * 100) / 100,
+        total_bookings: monthlyBookings,
+        total_revenue: monthlyRevenue,
+        total_revenue_dollars: monthlyRevenue / 100,
+      });
+
+      totalYearlyRevenue += monthlyRevenue;
+      totalOccupancySum += occupancyRate;
+    }
+
+    // Calculate average occupancy rate for the year
+    const averageOccupancyRate =
+      monthlyData.length > 0 ? totalOccupancySum / monthlyData.length : 0;
+
+    return {
+      year,
+      hotel_id: hotelId,
+      total_rooms: totalRooms,
+      average_occupancy_rate: Math.round(averageOccupancyRate * 100) / 100,
+      total_yearly_revenue: totalYearlyRevenue,
+      total_yearly_revenue_dollars: totalYearlyRevenue / 100,
+      months: monthlyData,
     };
   }
 }

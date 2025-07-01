@@ -22,6 +22,7 @@ import {
   HotelRoomsStatusDto,
   CustomersListDto,
   CheckOutsTodayDto,
+  YearlyCalendarDto,
 } from './dto/stats-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -411,6 +412,51 @@ export class StatsController {
     }
 
     return this.statsService.getCheckOutsToday(hotelId, date);
+  }
+
+  @Get('yearly-calendar')
+  @ApiOperation({
+    summary: 'Get yearly calendar with monthly occupancy percentages',
+    description:
+      'Get all 12 months of a year with occupancy percentages, revenue, and booking counts for each month',
+  })
+  @ApiQuery({
+    name: 'hotel_id',
+    description: 'Hotel UUID',
+    required: true,
+    type: 'string',
+  })
+  @ApiQuery({
+    name: 'year',
+    description: 'Year (YYYY)',
+    required: true,
+    type: 'number',
+    example: 2025,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Yearly calendar with monthly occupancy data',
+    type: YearlyCalendarDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid parameters' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+  async getYearlyCalendar(
+    @Query('hotel_id') hotelId: string,
+    @Query('year') year: string,
+  ): Promise<YearlyCalendarDto> {
+    if (!hotelId || !year) {
+      throw new BadRequestException('hotel_id and year are required');
+    }
+
+    const yearNum = parseInt(year, 10);
+    if (isNaN(yearNum) || yearNum < 2000 || yearNum > 2100) {
+      throw new BadRequestException(
+        'Invalid year. Must be between 2000 and 2100',
+      );
+    }
+
+    return this.statsService.getYearlyCalendar(hotelId, yearNum);
   }
 
   private isValidDate(dateString: string): boolean {
