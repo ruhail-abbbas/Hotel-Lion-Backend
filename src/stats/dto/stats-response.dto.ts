@@ -545,3 +545,103 @@ export class CheckOutsTodayDto {
     nights: number;
   }>;
 }
+
+export class MonthlyOccupancyDto {
+  @ApiProperty({
+    description: 'Month number (1-12)',
+    example: 1,
+  })
+  month: number;
+
+  @ApiProperty({
+    description: 'Month name',
+    example: 'January',
+  })
+  month_name: string;
+
+  @ApiProperty({
+    description: 'Year and month in YYYY-MM format',
+    example: '2025-01',
+  })
+  year_month: string;
+
+  @ApiProperty({
+    description: 'Total available room nights for the month',
+    example: 434,
+  })
+  total_room_nights: number;
+
+  @ApiProperty({
+    description: 'Number of occupied room nights',
+    example: 298,
+  })
+  occupied_room_nights: number;
+
+  @ApiProperty({
+    description: 'Occupancy rate as percentage',
+    example: 68.66,
+  })
+  occupancy_rate: number;
+
+  @ApiProperty({
+    description: 'Total bookings for the month',
+    example: 25,
+  })
+  total_bookings: number;
+
+  @ApiProperty({
+    description: 'Total revenue for the month in cents',
+    example: 375000,
+  })
+  total_revenue: number;
+
+  @ApiProperty({
+    description: 'Total revenue for the month in dollars',
+    example: 3750.0,
+  })
+  total_revenue_dollars: number;
+}
+
+export class YearlyCalendarDto {
+  @ApiProperty({
+    description: 'Year',
+    example: 2025,
+  })
+  year: number;
+
+  @ApiProperty({
+    description: 'Hotel ID',
+    example: 'hotel-uuid',
+  })
+  hotel_id: string;
+
+  @ApiProperty({
+    description: 'Total rooms in the hotel',
+    example: 14,
+  })
+  total_rooms: number;
+
+  @ApiProperty({
+    description: 'Average occupancy rate for the year',
+    example: 65.5,
+  })
+  average_occupancy_rate: number;
+
+  @ApiProperty({
+    description: 'Total revenue for the year in cents',
+    example: 4500000,
+  })
+  total_yearly_revenue: number;
+
+  @ApiProperty({
+    description: 'Total revenue for the year in dollars',
+    example: 45000.0,
+  })
+  total_yearly_revenue_dollars: number;
+
+  @ApiProperty({
+    description: 'Monthly occupancy data for all 12 months',
+    type: [MonthlyOccupancyDto],
+  })
+  months: MonthlyOccupancyDto[];
+}

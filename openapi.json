@@ -900,6 +900,63 @@
         ]
       }
     },
+    "/api/v1/admin/stats/yearly-calendar": {
+      "get": {
+        "description": "Get all 12 months of a year with occupancy percentages, revenue, and booking counts for each month",
+        "operationId": "StatsController_getYearlyCalendar",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "year",
+            "required": true,
+            "in": "query",
+            "description": "Year (YYYY)",
+            "schema": {
+              "example": 2025,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Yearly calendar with monthly occupancy data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/YearlyCalendarDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get yearly calendar with monthly occupancy percentages",
+        "tags": [
+          "Statistics"
+        ]
+      }
+    },
     "/api/v1/rooms": {
       "get": {
         "description": "Get a list of all available rooms for booking with details and photos",
@@ -2104,6 +2161,118 @@
           "date",
           "total_checkouts",
           "checkouts"
+        ]
+      },
+      "MonthlyOccupancyDto": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "number",
+            "description": "Month number (1-12)",
+            "example": 1
+          },
+          "month_name": {
+            "type": "string",
+            "description": "Month name",
+            "example": "January"
+          },
+          "year_month": {
+            "type": "string",
+            "description": "Year and month in YYYY-MM format",
+            "example": "2025-01"
+          },
+          "total_room_nights": {
+            "type": "number",
+            "description": "Total available room nights for the month",
+            "example": 434
+          },
+          "occupied_room_nights": {
+            "type": "number",
+            "description": "Number of occupied room nights",
+            "example": 298
+          },
+          "occupancy_rate": {
+            "type": "number",
+            "description": "Occupancy rate as percentage",
+            "example": 68.66
+          },
+          "total_bookings": {
+            "type": "number",
+            "description": "Total bookings for the month",
+            "example": 25
+          },
+          "total_revenue": {
+            "type": "number",
+            "description": "Total revenue for the month in cents",
+            "example": 375000
+          },
+          "total_revenue_dollars": {
+            "type": "number",
+            "description": "Total revenue for the month in dollars",
+            "example": 3750
+          }
+        },
+        "required": [
+          "month",
+          "month_name",
+          "year_month",
+          "total_room_nights",
+          "occupied_room_nights",
+          "occupancy_rate",
+          "total_bookings",
+          "total_revenue",
+          "total_revenue_dollars"
+        ]
+      },
+      "YearlyCalendarDto": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "number",
+            "description": "Year",
+            "example": 2025
+          },
+          "hotel_id": {
+            "type": "string",
+            "description": "Hotel ID",
+            "example": "hotel-uuid"
+          },
+          "total_rooms": {
+            "type": "number",
+            "description": "Total rooms in the hotel",
+            "example": 14
+          },
+          "average_occupancy_rate": {
+            "type": "number",
+            "description": "Average occupancy rate for the year",
+            "example": 65.5
+          },
+          "total_yearly_revenue": {
+            "type": "number",
+            "description": "Total revenue for the year in cents",
+            "example": 4500000
+          },
+          "total_yearly_revenue_dollars": {
+            "type": "number",
+            "description": "Total revenue for the year in dollars",
+            "example": 45000
+          },
+          "months": {
+            "description": "Monthly occupancy data for all 12 months",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonthlyOccupancyDto"
+            }
+          }
+        },
+        "required": [
+          "year",
+          "hotel_id",
+          "total_rooms",
+          "average_occupancy_rate",
+          "total_yearly_revenue",
+          "total_yearly_revenue_dollars",
+          "months"
         ]
       },
       "RoomPhotoDto": {
