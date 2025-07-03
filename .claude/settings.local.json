@@ -15,7 +15,14 @@
       "Bash(rm:*)",
       "Bash(npx prisma db push:*)",
       "Bash(npx prisma db seed:*)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "Bash(find:*)",
+      "Bash(PGPASSWORD=newpassword psql:*)",
+      "Bash(rg:*)",
+      "Bash(sed:*)",
+      "Bash(jq:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma migrate reset:*)"
     ],
     "deny": []
   }

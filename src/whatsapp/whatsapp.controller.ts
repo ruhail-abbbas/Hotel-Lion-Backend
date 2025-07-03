@@ -12,7 +12,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @ApiTags('WhatsApp')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
-@Controller('api/v1/whatsapsedp')
+@Controller('api/v1/whatsapp')
 export class WhatsAppController {
   constructor(private readonly whatsAppService: WhatsAppService) {}
 

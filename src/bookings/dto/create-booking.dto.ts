@@ -5,8 +5,6 @@ import {
   IsDateString,
   IsOptional,
   IsUUID,
-  IsInt,
-  IsPositive,
   MinLength,
   MaxLength,
   IsPhoneNumber,
@@ -71,15 +69,6 @@ export class CreateBookingDto {
     { message: 'check_out_date must be a valid date (YYYY-MM-DD)' },
   )
   check_out_date: string;
-
-  @ApiProperty({
-    description: 'Total cost in cents',
-    example: 36000,
-    minimum: 1,
-  })
-  @IsInt({ message: 'total_cost must be an integer' })
-  @IsPositive({ message: 'total_cost must be a positive number' })
-  total_cost: number;
 
   @ApiProperty({
     description: 'Booking source (optional)',

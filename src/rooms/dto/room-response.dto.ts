@@ -58,12 +58,6 @@ export class RoomListDto {
   base_price: number;
 
   @ApiProperty({
-    description: 'Base price per night in dollars',
-    example: 120.0,
-  })
-  base_price_dollars: number;
-
-  @ApiProperty({
     description: 'Maximum guest capacity',
     example: 2,
   })
@@ -80,6 +74,27 @@ export class RoomListDto {
     ],
   })
   amenities: any;
+
+  @ApiProperty({
+    description: 'Pet fee in cents',
+    example: 2500,
+    nullable: true,
+  })
+  pet_fee?: number;
+
+  @ApiProperty({
+    description: 'Minimum nights required for booking',
+    example: 2,
+    nullable: true,
+  })
+  minimum_nights?: number;
+
+  @ApiProperty({
+    description: 'Cleaning fee in cents',
+    example: 5000,
+    nullable: true,
+  })
+  cleaning_fee?: number;
 
   @ApiProperty({
     description: 'Room photos',
@@ -156,12 +171,6 @@ export class BookingDto {
     example: 36000,
   })
   total_cost: number;
-
-  @ApiProperty({
-    description: 'Total cost in dollars',
-    example: 360.0,
-  })
-  total_cost_dollars: number;
 }
 
 export class RoomCalendarDto {
@@ -226,4 +235,149 @@ export class RoomCalendarResponseDto {
     type: [RoomCalendarDto],
   })
   rooms: RoomCalendarDto[];
+}
+
+export class AvailableRoomDto {
+  @ApiProperty({
+    description: 'Room ID',
+    example: 'room-uuid',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'Room name',
+    example: 'Y1A',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'Room description',
+    example: 'Cozy single room with city view and modern amenities',
+  })
+  description: string;
+
+  @ApiProperty({
+    description: 'Room size in square meters',
+    example: 25,
+  })
+  size_sqm: number;
+
+  @ApiProperty({
+    description: 'Bed setup description',
+    example: '1 Queen Bed',
+  })
+  bed_setup: string;
+
+  @ApiProperty({
+    description: 'Base price per night in cents',
+    example: 12000,
+  })
+  base_price: number;
+
+  @ApiProperty({
+    description: 'Total cost for the stay in cents',
+    example: 36000,
+  })
+  total_cost: number;
+
+  @ApiProperty({
+    description: 'Number of nights',
+    example: 3,
+  })
+  nights: number;
+
+  @ApiProperty({
+    description: 'Maximum guest capacity',
+    example: 2,
+  })
+  max_capacity: number;
+
+  @ApiProperty({
+    description: 'Room amenities',
+    example: [
+      'WiFi',
+      'Air Conditioning',
+      'TV',
+      'Private Bathroom',
+      'Mini Fridge',
+    ],
+  })
+  amenities: any;
+
+  @ApiProperty({
+    description: 'Pet fee in cents',
+    example: 2500,
+    nullable: true,
+  })
+  pet_fee?: number;
+
+  @ApiProperty({
+    description: 'Minimum nights required for booking',
+    example: 2,
+    nullable: true,
+  })
+  minimum_nights?: number;
+
+  @ApiProperty({
+    description: 'Cleaning fee in cents',
+    example: 5000,
+    nullable: true,
+  })
+  cleaning_fee?: number;
+
+  @ApiProperty({
+    description: 'Room photos',
+    type: [RoomPhotoDto],
+  })
+  photos: RoomPhotoDto[];
+}
+
+export class RoomAvailabilityResponseDto {
+  @ApiProperty({
+    description: 'Hotel ID',
+    example: 'hotel-uuid',
+  })
+  hotel_id: string;
+
+  @ApiProperty({
+    description: 'Check-in date',
+    example: '2025-01-15',
+  })
+  check_in_date: string;
+
+  @ApiProperty({
+    description: 'Check-out date',
+    example: '2025-01-18',
+  })
+  check_out_date: string;
+
+  @ApiProperty({
+    description: 'Number of guests',
+    example: 2,
+  })
+  guests: number;
+
+  @ApiProperty({
+    description: 'Number of infants (under 2 years old)',
+    example: 1,
+  })
+  infants: number;
+
+  @ApiProperty({
+    description: 'Number of nights',
+    example: 3,
+  })
+  nights: number;
+
+  @ApiProperty({
+    description: 'Number of available rooms',
+    example: 8,
+  })
+  available_rooms_count: number;
+
+  @ApiProperty({
+    description: 'List of available rooms with pricing',
+    type: [AvailableRoomDto],
+  })
+  available_rooms: AvailableRoomDto[];
 }

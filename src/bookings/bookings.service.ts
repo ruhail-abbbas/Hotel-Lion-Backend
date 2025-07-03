@@ -4,6 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RoomsService } from '../rooms/rooms.service';
 import {
   BookingsListResponseDto,
   BookingResponseDto,
@@ -12,7 +13,10 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 
 @Injectable()
 export class BookingsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private roomsService: RoomsService,
+  ) {}
 
   async getAllBookings(hotelId: string): Promise<BookingsListResponseDto> {
     // Get all bookings for the hotel with room information
@@ -48,7 +52,6 @@ export class BookingsService {
       status: booking.status,
       source: booking.source || undefined,
       total_cost: booking.total_cost,
-      total_cost_dollars: booking.total_cost / 100,
       created_at: booking.created_at.toISOString(),
       updated_at: booking.updated_at.toISOString(),
     }));
@@ -63,7 +66,6 @@ export class BookingsService {
       hotel_id: hotelId,
       total_bookings: bookingsList.length,
       total_revenue: totalRevenue,
-      total_revenue_dollars: totalRevenue / 100,
       bookings: bookingsList,
     };
   }
@@ -78,7 +80,6 @@ export class BookingsService {
       guest_email,
       check_in_date,
       check_out_date,
-      total_cost,
       source,
     } = createBookingDto;
 
@@ -89,14 +90,28 @@ export class BookingsService {
     // Validate dates
     this.validateBookingDates(checkInDate, checkOutDate);
 
-    // Check if room exists
+    // Check if room exists and get rate rules for pricing
     const room = await this.prisma.room.findUnique({
       where: { id: room_id },
+      include: {
+        rate_rules: {
+          orderBy: {
+            price_per_night: 'desc',
+          },
+        },
+      },
     });
 
     if (!room) {
       throw new BadRequestException('Room not found');
     }
+
+    // Calculate the total cost using the room pricing logic
+    const { totalCost } = this.roomsService.calculateRoomPricing(
+      room,
+      checkInDate,
+      checkOutDate,
+    );
 
     // Check room availability
     await this.checkRoomAvailability(room_id, checkInDate, checkOutDate);
@@ -114,7 +129,7 @@ export class BookingsService {
         guest_email,
         check_in_date: checkInDate,
         check_out_date: checkOutDate,
-        total_cost,
+        total_cost: totalCost,
         source: source || null,
         status: 'pending',
       },
@@ -141,7 +156,6 @@ export class BookingsService {
       status: booking.status,
       source: booking.source || undefined,
       total_cost: booking.total_cost,
-      total_cost_dollars: booking.total_cost / 100,
       created_at: booking.created_at.toISOString(),
       updated_at: booking.updated_at.toISOString(),
     };

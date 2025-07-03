@@ -46,12 +46,6 @@ export class MonthlyRevenueDto {
   total_revenue: number;
 
   @ApiProperty({
-    description: 'Total revenue for the month in dollars',
-    example: 1250.0,
-  })
-  total_revenue_dollars: number;
-
-  @ApiProperty({
     description: 'Number of bookings',
     example: 25,
   })
@@ -94,12 +88,6 @@ export class AverageDailyRateDto {
     example: 4006,
   })
   adr_cents: number;
-
-  @ApiProperty({
-    description: 'Average daily rate in dollars',
-    example: 40.06,
-  })
-  adr_dollars: number;
 }
 
 export class BookingTrendsDto {
@@ -352,12 +340,6 @@ export class CustomerBookingDto {
   total_cost: number;
 
   @ApiProperty({
-    description: 'Total cost in dollars',
-    example: 360.0,
-  })
-  total_cost_dollars: number;
-
-  @ApiProperty({
     description: 'Number of nights',
     example: 3,
   })
@@ -413,12 +395,6 @@ export class CustomerDto {
     example: 108000,
   })
   total_spent: number;
-
-  @ApiProperty({
-    description: 'Total amount spent in dollars',
-    example: 1080.0,
-  })
-  total_spent_dollars: number;
 
   @ApiProperty({
     description: 'Date of first booking',
@@ -478,22 +454,10 @@ export class CustomersListDto {
   total_revenue: number;
 
   @ApiProperty({
-    description: 'Total revenue from all customers in dollars',
-    example: 23400.0,
-  })
-  total_revenue_dollars: number;
-
-  @ApiProperty({
     description: 'Average customer lifetime value in cents',
     example: 93600,
   })
   average_customer_value: number;
-
-  @ApiProperty({
-    description: 'Average customer lifetime value in dollars',
-    example: 936.0,
-  })
-  average_customer_value_dollars: number;
 
   @ApiProperty({
     description: 'List of all customers with their bookings',
@@ -594,12 +558,6 @@ export class MonthlyOccupancyDto {
     example: 375000,
   })
   total_revenue: number;
-
-  @ApiProperty({
-    description: 'Total revenue for the month in dollars',
-    example: 3750.0,
-  })
-  total_revenue_dollars: number;
 }
 
 export class YearlyCalendarDto {
@@ -632,12 +590,6 @@ export class YearlyCalendarDto {
     example: 4500000,
   })
   total_yearly_revenue: number;
-
-  @ApiProperty({
-    description: 'Total revenue for the year in dollars',
-    example: 45000.0,
-  })
-  total_yearly_revenue_dollars: number;
 
   @ApiProperty({
     description: 'Monthly occupancy data for all 12 months',
