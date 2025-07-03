@@ -385,7 +385,7 @@
         ]
       }
     },
-    "/api/v1/whatsapsedp/send-message": {
+    "/api/v1/whatsapp/send-message": {
       "post": {
         "operationId": "WhatsAppController_sendMessage",
         "parameters": [],
@@ -993,6 +993,82 @@
         ]
       }
     },
+    "/api/v1/rooms/search": {
+      "get": {
+        "description": "Search for available rooms based on check-in/check-out dates, hotel, and number of guests",
+        "operationId": "RoomsController_searchAvailableRooms",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "check_in_date",
+            "required": true,
+            "in": "query",
+            "description": "Check-in date (YYYY-MM-DD)",
+            "schema": {
+              "example": "2025-01-15",
+              "type": "string"
+            }
+          },
+          {
+            "name": "check_out_date",
+            "required": true,
+            "in": "query",
+            "description": "Check-out date (YYYY-MM-DD)",
+            "schema": {
+              "example": "2025-01-18",
+              "type": "string"
+            }
+          },
+          {
+            "name": "guests",
+            "required": true,
+            "in": "query",
+            "description": "Number of guests",
+            "schema": {
+              "example": 2,
+              "type": "number"
+            }
+          },
+          {
+            "name": "infants",
+            "required": false,
+            "in": "query",
+            "description": "Number of infants (under 2 years old)",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Available rooms found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomAvailabilityResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or dates"
+          }
+        },
+        "summary": "Search available rooms",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
     "/api/v1/rooms/calendar": {
       "get": {
         "description": "Get a calendar view of all rooms with their bookings for a specified time period (e.g., 7 days, 30 days, 60 days)",
@@ -1084,6 +1160,99 @@
           }
         },
         "summary": "Update room status",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/api/v1/rooms/{id}": {
+      "put": {
+        "description": "Update room details such as name, description, price, capacity, status, and amenities.",
+        "operationId": "RoomsController_editRoom",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Room UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Room update details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditRoomDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Room updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditRoomResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data or room name already exists"
+          },
+          "404": {
+            "description": "Room not found"
+          }
+        },
+        "summary": "Edit a room",
+        "tags": [
+          "Rooms"
+        ]
+      },
+      "delete": {
+        "description": "Delete a room from the hotel. Cannot delete rooms with active bookings.",
+        "operationId": "RoomsController_deleteRoom",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Room UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Room deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Room Y1A has been successfully deleted"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Cannot delete room with active bookings"
+          },
+          "404": {
+            "description": "Room not found"
+          }
+        },
+        "summary": "Delete a room",
         "tags": [
           "Rooms"
         ]
@@ -1543,11 +1712,6 @@
             "description": "Total revenue for the month in cents",
             "example": 125000
           },
-          "total_revenue_dollars": {
-            "type": "number",
-            "description": "Total revenue for the month in dollars",
-            "example": 1250
-          },
           "booking_count": {
             "type": "number",
             "description": "Number of bookings",
@@ -1562,7 +1726,6 @@
         "required": [
           "month",
           "total_revenue",
-          "total_revenue_dollars",
           "booking_count",
           "average_booking_value"
         ]
@@ -1594,11 +1757,6 @@
             "type": "number",
             "description": "Average daily rate in cents",
             "example": 4006
-          },
-          "adr_dollars": {
-            "type": "number",
-            "description": "Average daily rate in dollars",
-            "example": 40.06
           }
         },
         "required": [
@@ -1606,8 +1764,7 @@
           "end_date",
           "total_revenue",
           "occupied_room_nights",
-          "adr_cents",
-          "adr_dollars"
+          "adr_cents"
         ]
       },
       "BookingTrendsDto": {
@@ -1921,11 +2078,6 @@
             "description": "Total cost in cents",
             "example": 36000
           },
-          "total_cost_dollars": {
-            "type": "number",
-            "description": "Total cost in dollars",
-            "example": 360
-          },
           "nights": {
             "type": "number",
             "description": "Number of nights",
@@ -1959,7 +2111,6 @@
           "check_in_date",
           "check_out_date",
           "total_cost",
-          "total_cost_dollars",
           "nights",
           "status",
           "source",
@@ -1994,11 +2145,6 @@
             "description": "Total amount spent in cents",
             "example": 108000
           },
-          "total_spent_dollars": {
-            "type": "number",
-            "description": "Total amount spent in dollars",
-            "example": 1080
-          },
           "first_booking_date": {
             "type": "string",
             "description": "Date of first booking",
@@ -2023,7 +2169,6 @@
           "contact",
           "total_bookings",
           "total_spent",
-          "total_spent_dollars",
           "first_booking_date",
           "last_booking_date",
           "bookings"
@@ -2062,20 +2207,10 @@
             "description": "Total revenue from all customers in cents",
             "example": 2340000
           },
-          "total_revenue_dollars": {
-            "type": "number",
-            "description": "Total revenue from all customers in dollars",
-            "example": 23400
-          },
           "average_customer_value": {
             "type": "number",
             "description": "Average customer lifetime value in cents",
             "example": 93600
-          },
-          "average_customer_value_dollars": {
-            "type": "number",
-            "description": "Average customer lifetime value in dollars",
-            "example": 936
           },
           "customers": {
             "description": "List of all customers with their bookings",
@@ -2092,9 +2227,7 @@
           "returning_customers_percentage",
           "total_bookings",
           "total_revenue",
-          "total_revenue_dollars",
           "average_customer_value",
-          "average_customer_value_dollars",
           "customers"
         ]
       },
@@ -2205,11 +2338,6 @@
             "type": "number",
             "description": "Total revenue for the month in cents",
             "example": 375000
-          },
-          "total_revenue_dollars": {
-            "type": "number",
-            "description": "Total revenue for the month in dollars",
-            "example": 3750
           }
         },
         "required": [
@@ -2220,8 +2348,7 @@
           "occupied_room_nights",
           "occupancy_rate",
           "total_bookings",
-          "total_revenue",
-          "total_revenue_dollars"
+          "total_revenue"
         ]
       },
       "YearlyCalendarDto": {
@@ -2252,11 +2379,6 @@
             "description": "Total revenue for the year in cents",
             "example": 4500000
           },
-          "total_yearly_revenue_dollars": {
-            "type": "number",
-            "description": "Total revenue for the year in dollars",
-            "example": 45000
-          },
           "months": {
             "description": "Monthly occupancy data for all 12 months",
             "type": "array",
@@ -2271,7 +2393,6 @@
           "total_rooms",
           "average_occupancy_rate",
           "total_yearly_revenue",
-          "total_yearly_revenue_dollars",
           "months"
         ]
       },
@@ -2333,11 +2454,6 @@
             "description": "Base price per night in cents",
             "example": 12000
           },
-          "base_price_dollars": {
-            "type": "number",
-            "description": "Base price per night in dollars",
-            "example": 120
-          },
           "max_capacity": {
             "type": "number",
             "description": "Maximum guest capacity",
@@ -2354,6 +2470,24 @@
               "Mini Fridge"
             ]
           },
+          "pet_fee": {
+            "type": "number",
+            "description": "Pet fee in cents",
+            "example": 2500,
+            "nullable": true
+          },
+          "minimum_nights": {
+            "type": "number",
+            "description": "Minimum nights required for booking",
+            "example": 2,
+            "nullable": true
+          },
+          "cleaning_fee": {
+            "type": "number",
+            "description": "Cleaning fee in cents",
+            "example": 5000,
+            "nullable": true
+          },
           "photos": {
             "description": "Room photos",
             "type": "array",
@@ -2369,9 +2503,11 @@
           "size_sqm",
           "bed_setup",
           "base_price",
-          "base_price_dollars",
           "max_capacity",
           "amenities",
+          "pet_fee",
+          "minimum_nights",
+          "cleaning_fee",
           "photos"
         ]
       },
@@ -2400,6 +2536,165 @@
           "hotel_id",
           "total_rooms",
           "rooms"
+        ]
+      },
+      "AvailableRoomDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Room ID",
+            "example": "room-uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Room name",
+            "example": "Y1A"
+          },
+          "description": {
+            "type": "string",
+            "description": "Room description",
+            "example": "Cozy single room with city view and modern amenities"
+          },
+          "size_sqm": {
+            "type": "number",
+            "description": "Room size in square meters",
+            "example": 25
+          },
+          "bed_setup": {
+            "type": "string",
+            "description": "Bed setup description",
+            "example": "1 Queen Bed"
+          },
+          "base_price": {
+            "type": "number",
+            "description": "Base price per night in cents",
+            "example": 12000
+          },
+          "total_cost": {
+            "type": "number",
+            "description": "Total cost for the stay in cents",
+            "example": 36000
+          },
+          "nights": {
+            "type": "number",
+            "description": "Number of nights",
+            "example": 3
+          },
+          "max_capacity": {
+            "type": "number",
+            "description": "Maximum guest capacity",
+            "example": 2
+          },
+          "amenities": {
+            "type": "object",
+            "description": "Room amenities",
+            "example": [
+              "WiFi",
+              "Air Conditioning",
+              "TV",
+              "Private Bathroom",
+              "Mini Fridge"
+            ]
+          },
+          "pet_fee": {
+            "type": "number",
+            "description": "Pet fee in cents",
+            "example": 2500,
+            "nullable": true
+          },
+          "minimum_nights": {
+            "type": "number",
+            "description": "Minimum nights required for booking",
+            "example": 2,
+            "nullable": true
+          },
+          "cleaning_fee": {
+            "type": "number",
+            "description": "Cleaning fee in cents",
+            "example": 5000,
+            "nullable": true
+          },
+          "photos": {
+            "description": "Room photos",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoomPhotoDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "size_sqm",
+          "bed_setup",
+          "base_price",
+          "total_cost",
+          "nights",
+          "max_capacity",
+          "amenities",
+          "pet_fee",
+          "minimum_nights",
+          "cleaning_fee",
+          "photos"
+        ]
+      },
+      "RoomAvailabilityResponseDto": {
+        "type": "object",
+        "properties": {
+          "hotel_id": {
+            "type": "string",
+            "description": "Hotel ID",
+            "example": "hotel-uuid"
+          },
+          "check_in_date": {
+            "type": "string",
+            "description": "Check-in date",
+            "example": "2025-01-15"
+          },
+          "check_out_date": {
+            "type": "string",
+            "description": "Check-out date",
+            "example": "2025-01-18"
+          },
+          "guests": {
+            "type": "number",
+            "description": "Number of guests",
+            "example": 2
+          },
+          "infants": {
+            "type": "number",
+            "description": "Number of infants (under 2 years old)",
+            "example": 1
+          },
+          "nights": {
+            "type": "number",
+            "description": "Number of nights",
+            "example": 3
+          },
+          "available_rooms_count": {
+            "type": "number",
+            "description": "Number of available rooms",
+            "example": 8
+          },
+          "available_rooms": {
+            "description": "List of available rooms with pricing",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AvailableRoomDto"
+            }
+          }
+        },
+        "required": [
+          "hotel_id",
+          "check_in_date",
+          "check_out_date",
+          "guests",
+          "infants",
+          "nights",
+          "available_rooms_count",
+          "available_rooms"
         ]
       },
       "BookingDto": {
@@ -2444,11 +2739,6 @@
             "type": "number",
             "description": "Total cost in cents",
             "example": 36000
-          },
-          "total_cost_dollars": {
-            "type": "number",
-            "description": "Total cost in dollars",
-            "example": 360
           }
         },
         "required": [
@@ -2459,8 +2749,7 @@
           "check_in_date",
           "check_out_date",
           "status",
-          "total_cost",
-          "total_cost_dollars"
+          "total_cost"
         ]
       },
       "RoomCalendarDto": {
@@ -2617,6 +2906,198 @@
           "updated_at"
         ]
       },
+      "EditRoomDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Room name",
+            "example": "Y1A",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "description": {
+            "type": "string",
+            "description": "Room description",
+            "example": "Cozy single room with city view and modern amenities",
+            "maxLength": 500
+          },
+          "size_sqm": {
+            "type": "number",
+            "description": "Room size in square meters",
+            "example": 25,
+            "minimum": 1,
+            "maximum": 500
+          },
+          "bed_setup": {
+            "type": "string",
+            "description": "Bed setup description",
+            "example": "1 Queen Bed",
+            "maxLength": 100
+          },
+          "base_price": {
+            "type": "number",
+            "description": "Base price per night in cents",
+            "example": 12000,
+            "minimum": 100,
+            "maximum": 10000000
+          },
+          "max_capacity": {
+            "type": "number",
+            "description": "Maximum guest capacity",
+            "example": 2,
+            "minimum": 1,
+            "maximum": 20
+          },
+          "status": {
+            "type": "string",
+            "description": "Room status",
+            "enum": [
+              "available",
+              "out_of_service",
+              "cleaning"
+            ],
+            "example": "available"
+          },
+          "amenities": {
+            "description": "Room amenities (array of strings)",
+            "example": [
+              "WiFi",
+              "Air Conditioning",
+              "TV",
+              "Private Bathroom",
+              "Mini Fridge"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pet_fee": {
+            "type": "number",
+            "description": "Pet fee in cents",
+            "example": 2500,
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "minimum_nights": {
+            "type": "number",
+            "description": "Minimum nights required for booking",
+            "example": 2,
+            "minimum": 1,
+            "maximum": 365
+          },
+          "cleaning_fee": {
+            "type": "number",
+            "description": "Cleaning fee in cents",
+            "example": 5000,
+            "minimum": 0,
+            "maximum": 1000000
+          }
+        }
+      },
+      "EditRoomResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Room ID",
+            "example": "room-uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Room name",
+            "example": "Y1A"
+          },
+          "description": {
+            "type": "string",
+            "description": "Room description",
+            "example": "Cozy single room with city view and modern amenities"
+          },
+          "size_sqm": {
+            "type": "number",
+            "description": "Room size in square meters",
+            "example": 25
+          },
+          "bed_setup": {
+            "type": "string",
+            "description": "Bed setup description",
+            "example": "1 Queen Bed"
+          },
+          "base_price": {
+            "type": "number",
+            "description": "Base price per night in cents",
+            "example": 12000
+          },
+          "max_capacity": {
+            "type": "number",
+            "description": "Maximum guest capacity",
+            "example": 2
+          },
+          "status": {
+            "type": "string",
+            "description": "Room status",
+            "enum": [
+              "available",
+              "out_of_service",
+              "cleaning"
+            ],
+            "example": "available"
+          },
+          "amenities": {
+            "description": "Room amenities",
+            "example": [
+              "WiFi",
+              "Air Conditioning",
+              "TV",
+              "Private Bathroom",
+              "Mini Fridge"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pet_fee": {
+            "type": "number",
+            "description": "Pet fee in cents",
+            "example": 2500,
+            "nullable": true
+          },
+          "minimum_nights": {
+            "type": "number",
+            "description": "Minimum nights required for booking",
+            "example": 2,
+            "nullable": true
+          },
+          "cleaning_fee": {
+            "type": "number",
+            "description": "Cleaning fee in cents",
+            "example": 5000,
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Last update timestamp",
+            "example": "2024-01-10T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "size_sqm",
+          "bed_setup",
+          "base_price",
+          "max_capacity",
+          "status",
+          "amenities",
+          "pet_fee",
+          "minimum_nights",
+          "cleaning_fee",
+          "updated_at"
+        ]
+      },
       "BookingResponseDto": {
         "type": "object",
         "properties": {
@@ -2685,11 +3166,6 @@
             "description": "Total cost in cents",
             "example": 36000
           },
-          "total_cost_dollars": {
-            "type": "number",
-            "description": "Total cost in dollars",
-            "example": 360
-          },
           "created_at": {
             "type": "string",
             "description": "Booking creation date",
@@ -2712,7 +3188,6 @@
           "check_out_date",
           "status",
           "total_cost",
-          "total_cost_dollars",
           "created_at",
           "updated_at"
         ]
@@ -2735,11 +3210,6 @@
             "description": "Total revenue from all bookings in cents",
             "example": 125000
           },
-          "total_revenue_dollars": {
-            "type": "number",
-            "description": "Total revenue from all bookings in dollars",
-            "example": 1250
-          },
           "bookings": {
             "description": "List of all bookings",
             "type": "array",
@@ -2752,7 +3222,6 @@
           "hotel_id",
           "total_bookings",
           "total_revenue",
-          "total_revenue_dollars",
           "bookings"
         ]
       },
@@ -2791,12 +3260,6 @@
             "description": "Check-out date (YYYY-MM-DD)",
             "example": "2024-01-18"
           },
-          "total_cost": {
-            "type": "number",
-            "description": "Total cost in cents",
-            "example": 36000,
-            "minimum": 1
-          },
           "source": {
             "type": "string",
             "description": "Booking source (optional)",
@@ -2809,8 +3272,7 @@
           "guest_name",
           "guest_email",
           "check_in_date",
-          "check_out_date",
-          "total_cost"
+          "check_out_date"
         ]
       },
       "ContactInfoDto": {

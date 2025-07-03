@@ -117,7 +117,6 @@ export class StatsService {
     return {
       month: `${year}-${month.toString().padStart(2, '0')}`,
       total_revenue: totalRevenue,
-      total_revenue_dollars: totalRevenue / 100,
       booking_count: bookingCount,
       average_booking_value: averageBookingValue,
     };
@@ -203,7 +202,6 @@ export class StatsService {
       total_revenue: totalRevenue,
       occupied_room_nights: occupiedRoomNights,
       adr_cents: adrCents,
-      adr_dollars: adrCents / 100,
     };
   }
 
@@ -546,7 +544,6 @@ export class StatsService {
         check_in_date: booking.check_in_date.toISOString().split('T')[0],
         check_out_date: booking.check_out_date.toISOString().split('T')[0],
         total_cost: booking.total_cost,
-        total_cost_dollars: booking.total_cost / 100,
         nights,
         status: booking.status,
         source: booking.source || 'Website',
@@ -562,7 +559,6 @@ export class StatsService {
         contact: customer.contact,
         total_bookings: customer.bookings.length,
         total_spent: customer.total_spent,
-        total_spent_dollars: customer.total_spent / 100,
         first_booking_date: customer.first_booking_date.toISOString(),
         last_booking_date: customer.last_booking_date.toISOString(),
         bookings: customer.bookings.sort(
@@ -606,9 +602,7 @@ export class StatsService {
         Math.round(returningCustomersPercentage * 100) / 100, // Round to 2 decimal places
       total_bookings: totalBookings,
       total_revenue: totalRevenue,
-      total_revenue_dollars: totalRevenue / 100,
       average_customer_value: Math.round(averageCustomerValue),
-      average_customer_value_dollars: Math.round(averageCustomerValue) / 100,
       customers,
     };
   }
@@ -782,7 +776,6 @@ export class StatsService {
         occupancy_rate: Math.round(occupancyRate * 100) / 100,
         total_bookings: monthlyBookings,
         total_revenue: monthlyRevenue,
-        total_revenue_dollars: monthlyRevenue / 100,
       });
 
       totalYearlyRevenue += monthlyRevenue;
@@ -799,7 +792,6 @@ export class StatsService {
       total_rooms: totalRooms,
       average_occupancy_rate: Math.round(averageOccupancyRate * 100) / 100,
       total_yearly_revenue: totalYearlyRevenue,
-      total_yearly_revenue_dollars: totalYearlyRevenue / 100,
       months: monthlyData,
     };
   }
