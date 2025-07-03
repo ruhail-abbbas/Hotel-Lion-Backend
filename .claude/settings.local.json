@@ -1,29 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep:*)",
-      "Bash(pnpm add:*)",
-      "Bash(mkdir:*)",
-      "Bash(pnpm run:*)",
-      "Bash(npx tsc:*)",
-      "Bash(pnpm run:*)",
-      "Bash(sudo apt:*)",
-      "Bash(sudo apt install:*)",
-      "Bash(curl:*)",
-      "Bash(npx prisma db execute:*)",
-      "Bash(node:*)",
-      "Bash(rm:*)",
-      "Bash(npx prisma db push:*)",
-      "Bash(npx prisma db seed:*)",
-      "Bash(psql:*)",
-      "Bash(npx prisma:*)"
-      "Bash(find:*)",
-      "Bash(PGPASSWORD=newpassword psql:*)",
-      "Bash(rg:*)",
-      "Bash(sed:*)",
-      "Bash(jq:*)",
-      "Bash(npx prisma migrate dev:*)",
-      "Bash(npx prisma migrate reset:*)"
+      "Bash(npx prettier:*)",
+      "Bash(npx ts-node:*)"
     ],
     "deny": []
   }
