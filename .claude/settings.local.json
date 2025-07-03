@@ -16,6 +16,7 @@
       "Bash(npx prisma db push:*)",
       "Bash(npx prisma db seed:*)",
       "Bash(psql:*)",
+      "Bash(npx prisma:*)"
       "Bash(find:*)",
       "Bash(PGPASSWORD=newpassword psql:*)",
       "Bash(rg:*)",
