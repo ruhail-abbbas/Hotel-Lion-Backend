@@ -77,12 +77,6 @@ export class BookingResponseDto {
   total_cost: number;
 
   @ApiProperty({
-    description: 'Total cost in dollars',
-    example: 360.0,
-  })
-  total_cost_dollars: number;
-
-  @ApiProperty({
     description: 'Booking creation date',
     example: '2024-01-10T10:30:00.000Z',
   })
@@ -113,12 +107,6 @@ export class BookingsListResponseDto {
     example: 125000,
   })
   total_revenue: number;
-
-  @ApiProperty({
-    description: 'Total revenue from all bookings in dollars',
-    example: 1250.0,
-  })
-  total_revenue_dollars: number;
 
   @ApiProperty({
     description: 'List of all bookings',

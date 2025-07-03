@@ -105,7 +105,6 @@ async function main() {
     { name: 'B7', type: 'standard', size: 22, price: 13000, bed: 'Queen bed', floor: 4 },
     { name: 'B8', type: 'deluxe', size: 26, price: 15000, bed: 'Queen bed with balcony', floor: 4 }
   ];
-
   const createdRooms: any[] = [];
 
   for (const roomData of roomsData) {
@@ -120,13 +119,16 @@ async function main() {
       const room = await prisma.room.create({
         data: {
           hotel_id: hotel.id,
-          name: roomData.name,
-          description: `${roomData.type.charAt(0).toUpperCase() + roomData.type.slice(1)} room ${roomData.name} on floor ${roomData.floor}. Features ${roomData.bed.toLowerCase()} and modern amenities.`,
-          size_sqm: roomData.size,
-          bed_setup: roomData.bed,
-          base_price: roomData.price,
-          max_capacity: roomData.type === 'penthouse' ? 4 : 2,
-          status: RoomStatus.available,
+          name: roomName,
+          description: `Room ${roomName} at Hotel Lion`,
+          size_sqm: roomName.startsWith('Y') ? 25 : 20, // Y rooms are slightly larger
+          bed_setup: roomName.startsWith('Y') ? 'King bed' : 'Queen bed',
+          base_price: roomName.startsWith('Y') ? 15000 : 12000, // Base fallback price in cents
+          max_capacity: 2,
+          status: 'available',
+          pet_fee: 2500, // $25 pet fee
+          minimum_nights: roomName.startsWith('Y') ? 2 : 1, // Y rooms require 2 nights minimum
+          cleaning_fee: 5000, // $50 cleaning fee
           amenities: {
             wifi: true,
             air_conditioning: true,
@@ -141,12 +143,87 @@ async function main() {
           }
         }
       });
+      console.log(`✅ Created room: ${roomName}`);
 
-      createdRooms.push(room);
-      console.log(`✅ Created room: ${roomData.name} (${roomData.type})`);
+      // Create rate rules for this room
+      // Default rate rule for the entire year 2025 and beyond
+      const startDate = new Date('2025-01-01');
+      const endDate = new Date('2026-12-31');
+      
+      // Set pricing based on room type
+      const pricePerNight = roomName.startsWith('Y') ? 15000 : 12000; // Y rooms: $150, B rooms: $120
+      
+      await prisma.rateRule.create({
+        data: {
+          room_id: room.id,
+          start_date: startDate,
+          end_date: endDate,
+          price_per_night: pricePerNight,
+          min_stay_nights: 1,
+          day_of_week: [0, 1, 2, 3, 4, 5, 6], // All days of the week
+          source: 'website'
+        }
+      });
+      console.log(`✅ Created default rate rule for room: ${roomName} - $${pricePerNight / 100}/night`);
+
+      // Create weekend premium rate rule (Friday & Saturday)
+      const weekendPremium = Math.round(pricePerNight * 1.2); // 20% premium for weekends
+      
+      await prisma.rateRule.create({
+        data: {
+          room_id: room.id,
+          start_date: startDate,
+          end_date: endDate,
+          price_per_night: weekendPremium,
+          min_stay_nights: 1,
+          day_of_week: [5, 6], // Friday & Saturday
+          source: 'website'
+        }
+      });
+      console.log(`✅ Created weekend rate rule for room: ${roomName} - $${weekendPremium / 100}/night (Fri-Sat)`);
+      
     } else {
-      createdRooms.push(existingRoom);
-      console.log(`🏠 Room already exists: ${roomData.name}`);
+      console.log(`🏠 Room already exists: ${roomName}`);
+      
+      // Check if rate rules exist for this room
+      const existingRateRules = await prisma.rateRule.findMany({
+        where: { room_id: existingRoom.id }
+      });
+      
+      if (existingRateRules.length === 0) {
+        // Create rate rules for existing room
+        const startDate = new Date('2025-01-01');
+        const endDate = new Date('2026-12-31');
+        const pricePerNight = roomName.startsWith('Y') ? 15000 : 12000;
+        
+        await prisma.rateRule.create({
+          data: {
+            room_id: existingRoom.id,
+            start_date: startDate,
+            end_date: endDate,
+            price_per_night: pricePerNight,
+            min_stay_nights: 1,
+            day_of_week: [0, 1, 2, 3, 4, 5, 6],
+            source: 'website'
+          }
+        });
+        
+        const weekendPremium = Math.round(pricePerNight * 1.2);
+        await prisma.rateRule.create({
+          data: {
+            room_id: existingRoom.id,
+            start_date: startDate,
+            end_date: endDate,
+            price_per_night: weekendPremium,
+            min_stay_nights: 1,
+            day_of_week: [5, 6],
+            source: 'website'
+          }
+        });
+        console.log(`✅ Created rate rules for existing room: ${roomName}`);
+      } else {
+        console.log(`📋 Rate rules already exist for room: ${roomName}`);
+      }
     }
   }
 
