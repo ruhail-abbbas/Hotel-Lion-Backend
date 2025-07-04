@@ -69,7 +69,7 @@ export class RoomsController {
   @ApiOperation({
     summary: 'Search available rooms',
     description:
-      'Search for available rooms based on check-in/check-out dates, hotel, and number of guests',
+      'Search for available rooms based on check-in/check-out dates, hotel, and number of guests. Filters out rooms that do not meet minimum night requirements.',
   })
   @ApiQuery({
     name: 'hotel_id',

@@ -301,10 +301,20 @@ export class RoomsService {
       },
     });
 
-    // Filter out rooms that have conflicting bookings
-    const availableRooms = allRooms.filter(
-      (room) => room.bookings.length === 0,
-    );
+    // Filter out rooms that have conflicting bookings or don't meet minimum nights requirement
+    const availableRooms = allRooms.filter((room) => {
+      // Check for booking conflicts
+      if (room.bookings.length > 0) {
+        return false;
+      }
+
+      // Check minimum nights requirement
+      if (room.minimum_nights && nights < room.minimum_nights) {
+        return false;
+      }
+
+      return true;
+    });
 
     // Transform to response DTOs with proper pricing from rate rules
     const availableRoomDtos: AvailableRoomDto[] = [];
