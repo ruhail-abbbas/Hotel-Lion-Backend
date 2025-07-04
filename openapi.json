@@ -995,7 +995,7 @@
     },
     "/api/v1/rooms/search": {
       "get": {
-        "description": "Search for available rooms based on check-in/check-out dates, hotel, and number of guests",
+        "description": "Search for available rooms based on check-in/check-out dates, hotel, and number of guests. Filters out rooms that do not meet minimum night requirements.",
         "operationId": "RoomsController_searchAvailableRooms",
         "parameters": [
           {
@@ -1435,6 +1435,54 @@
         "summary": "Update hotel details",
         "tags": [
           "Hotels"
+        ]
+      }
+    },
+    "/api/v1/admin/cleaning/send-notifications": {
+      "post": {
+        "description": "Manually trigger cleaning notifications for today's checkouts. Useful for testing or sending notifications outside the scheduled time.",
+        "operationId": "CleaningController_sendCleaningNotifications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Cleaning notifications sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Cleaning notifications sent successfully"
+                    },
+                    "checkoutsFound": {
+                      "type": "number",
+                      "example": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT token required"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send cleaning notifications manually",
+        "tags": [
+          "Cleaning"
         ]
       }
     }

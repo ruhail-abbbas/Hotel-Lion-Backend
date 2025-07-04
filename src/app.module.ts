@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -10,10 +11,12 @@ import { StatsModule } from './stats/stats.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { HotelsModule } from './hotels/hotels.module';
+import { CleaningModule } from './cleaning/cleaning.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -22,6 +25,7 @@ import { HotelsModule } from './hotels/hotels.module';
     RoomsModule,
     BookingsModule,
     HotelsModule,
+    CleaningModule,
   ],
   controllers: [AppController],
   providers: [AppService],

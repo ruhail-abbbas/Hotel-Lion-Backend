@@ -50,7 +50,7 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 - Rooms: visual cards, modal editing - *Database ready*
 - Prices: channel matrix (Website<Airbnb<Booking.com) - *Rate rules in database*
 - Customers: guest list, registration PDFs - *Database ready*
-- Cleaning: 9:30AM auto-schedule, WhatsApp dispatch, staff management - *WhatsApp integration ready*
+- Cleaning: 9:30AM auto-schedule, WhatsApp dispatch, staff management - *✅ Fully implemented*
 
 **Channels** 🚧: Real-time 2-way sync (Airbnb/Booking.com), prevents double-booking - *Database ready*
 
@@ -109,6 +109,9 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 ### WhatsApp Integration ✅ *NEW*
 - `POST /api/v1/whatsapp/send-message` – Send WhatsApp message via Twilio
 
+### Cleaning Management ✅ *NEW*
+- `POST /api/v1/admin/cleaning/send-notifications` – Manually trigger cleaning notifications
+
 ## Key Workflows
 
 1. **Authentication**: Sign-in→JWT tokens→Protected access→Token refresh
@@ -116,7 +119,7 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 3. **Booking**: Search→Lock dates→Payment→Confirm→Send guides
 4. **Registration**: Email link→Form submission→Access code generation
 5. **Channel Sync**: Any booking blocks all channels instantly
-6. **Cleaning**: Daily 9:30AM query→WhatsApp to staff (multi-language)
+6. **Cleaning**: Daily 9:30AM cron job→Query today's checkouts→WhatsApp to cleaning staff with room details
 7. **Message Routing**: All channels→Owner's WhatsApp
 
 ## Environment Variables
@@ -137,6 +140,9 @@ PAYPAL_CLIENT_ID=...
 TWILIO_ACCOUNT_SID=...
 TWILIO_AUTH_TOKEN=...
 TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
+
+# Cleaning Staff Notifications ✅
+CLEANING_STAFF_NUMBERS=+1234567890,+0987654321
 
 # Channel Integrations (not yet implemented)
 AIRBNB_API_KEY=...
