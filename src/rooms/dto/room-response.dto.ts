@@ -52,10 +52,24 @@ export class RoomListDto {
   bed_setup: string;
 
   @ApiProperty({
-    description: 'Base price per night in cents',
+    description: 'Base price per night in cents (for website/direct bookings)',
     example: 12000,
   })
   base_price: number;
+
+  @ApiProperty({
+    description: 'Airbnb price per night in cents',
+    example: 13000,
+    nullable: true,
+  })
+  airbnb_price?: number;
+
+  @ApiProperty({
+    description: 'Booking.com price per night in cents',
+    example: 14000,
+    nullable: true,
+  })
+  booking_com_price?: number;
 
   @ApiProperty({
     description: 'Maximum guest capacity',
@@ -269,10 +283,24 @@ export class AvailableRoomDto {
   bed_setup: string;
 
   @ApiProperty({
-    description: 'Base price per night in cents',
+    description: 'Base price per night in cents (for website/direct bookings)',
     example: 12000,
   })
   base_price: number;
+
+  @ApiProperty({
+    description: 'Airbnb price per night in cents',
+    example: 13000,
+    nullable: true,
+  })
+  airbnb_price?: number;
+
+  @ApiProperty({
+    description: 'Booking.com price per night in cents',
+    example: 14000,
+    nullable: true,
+  })
+  booking_com_price?: number;
 
   @ApiProperty({
     description: 'Total cost for the stay in cents',

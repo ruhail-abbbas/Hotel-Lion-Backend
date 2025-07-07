@@ -88,21 +88,23 @@ model HotelUsersPivot {
 }
 
 model Room {
-  id             String     @id @default(uuid()) @db.Uuid
-  hotel_id       String     @db.Uuid
-  name           String
-  description    String?
-  size_sqm       Int?
-  bed_setup      String?
-  base_price     Int        // Price in cents
-  max_capacity   Int
-  status         RoomStatus @default(available)
-  amenities      Json?
-  pet_fee        Int?       // Pet fee in cents
-  minimum_nights Int?       // Minimum nights required for booking
-  cleaning_fee   Int?       // Cleaning fee in cents
-  created_at     DateTime   @default(now())
-  updated_at     DateTime   @updatedAt
+  id                String     @id @default(uuid()) @db.Uuid
+  hotel_id          String     @db.Uuid
+  name              String
+  description       String?
+  size_sqm          Int?
+  bed_setup         String?
+  base_price        Int        // Price in cents (for website/direct bookings)
+  airbnb_price      Int?       // Price in cents for Airbnb (optional - defaults to base_price if null)
+  booking_com_price Int?       // Price in cents for Booking.com (optional - defaults to base_price if null)
+  max_capacity      Int
+  status            RoomStatus @default(available)
+  amenities         Json?
+  pet_fee           Int?       // Pet fee in cents
+  minimum_nights    Int?       // Minimum nights required for booking
+  cleaning_fee      Int?       // Cleaning fee in cents
+  created_at        DateTime   @default(now())
+  updated_at        DateTime   @updatedAt
 
   // Relationships
   hotel         Hotel         @relation(fields: [hotel_id], references: [id], onDelete: Cascade)

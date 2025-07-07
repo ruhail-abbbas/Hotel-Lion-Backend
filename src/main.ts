@@ -1,9 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Serve static files from uploads directory
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   // Enable CORS
   app.enableCors({
@@ -36,7 +43,7 @@ async function bootstrap() {
     .addTag('User Management', 'Admin user management endpoints')
     .addTag('WhatsApp', 'WhatsApp messaging via Twilio')
     .addTag('hotels', 'Hotel management endpoints')
-    .addTag('rooms', 'Room inventory and availability')
+    .addTag('Rooms', 'Room inventory and availability')
     .addTag('bookings', 'Reservation management')
     .addTag('payments', 'Payment processing')
     .build();

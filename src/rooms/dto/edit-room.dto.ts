@@ -68,7 +68,7 @@ export class EditRoomDto {
   bed_setup?: string;
 
   @ApiProperty({
-    description: 'Base price per night in cents',
+    description: 'Base price per night in cents (for website/direct bookings)',
     example: 12000,
     required: false,
     minimum: 100,
@@ -82,6 +82,40 @@ export class EditRoomDto {
     message: 'base_price must not exceed 10000000 cents ($100,000)',
   })
   base_price?: number;
+
+  @ApiProperty({
+    description:
+      'Airbnb price per night in cents (optional - defaults to base_price if not set)',
+    example: 13000,
+    required: false,
+    minimum: 100,
+    maximum: 10000000,
+  })
+  @IsOptional()
+  @IsInt({ message: 'airbnb_price must be an integer' })
+  @IsPositive({ message: 'airbnb_price must be a positive number' })
+  @Min(100, { message: 'airbnb_price must be at least 100 cents ($1)' })
+  @Max(10000000, {
+    message: 'airbnb_price must not exceed 10000000 cents ($100,000)',
+  })
+  airbnb_price?: number;
+
+  @ApiProperty({
+    description:
+      'Booking.com price per night in cents (optional - defaults to base_price if not set)',
+    example: 14000,
+    required: false,
+    minimum: 100,
+    maximum: 10000000,
+  })
+  @IsOptional()
+  @IsInt({ message: 'booking_com_price must be an integer' })
+  @IsPositive({ message: 'booking_com_price must be a positive number' })
+  @Min(100, { message: 'booking_com_price must be at least 100 cents ($1)' })
+  @Max(10000000, {
+    message: 'booking_com_price must not exceed 10000000 cents ($100,000)',
+  })
+  booking_com_price?: number;
 
   @ApiProperty({
     description: 'Maximum guest capacity',
@@ -205,10 +239,24 @@ export class EditRoomResponseDto {
   bed_setup: string;
 
   @ApiProperty({
-    description: 'Base price per night in cents',
+    description: 'Base price per night in cents (for website/direct bookings)',
     example: 12000,
   })
   base_price: number;
+
+  @ApiProperty({
+    description: 'Airbnb price per night in cents',
+    example: 13000,
+    nullable: true,
+  })
+  airbnb_price?: number;
+
+  @ApiProperty({
+    description: 'Booking.com price per night in cents',
+    example: 14000,
+    nullable: true,
+  })
+  booking_com_price?: number;
 
   @ApiProperty({
     description: 'Maximum guest capacity',
