@@ -187,6 +187,32 @@ export class BookingDto {
   total_cost: number;
 }
 
+export class AirbnbAvailabilityDto {
+  @ApiProperty({
+    description: 'Date in YYYY-MM-DD format',
+    example: '2025-01-08',
+  })
+  date: string;
+
+  @ApiProperty({
+    description: 'Whether the date is available on Airbnb',
+    example: true,
+  })
+  available: boolean;
+
+  @ApiProperty({
+    description: 'Whether the date is available for check-in on Airbnb',
+    example: true,
+  })
+  availableForCheckin: boolean;
+
+  @ApiProperty({
+    description: 'Whether the date is available for check-out on Airbnb',
+    example: true,
+  })
+  availableForCheckout: boolean;
+}
+
 export class RoomCalendarDto {
   @ApiProperty({
     description: 'Room ID',
@@ -211,6 +237,14 @@ export class RoomCalendarDto {
     type: [BookingDto],
   })
   bookings: BookingDto[];
+
+  @ApiProperty({
+    description:
+      'Airbnb availability data for this room (if Airbnb listings exist)',
+    type: [AirbnbAvailabilityDto],
+    required: false,
+  })
+  airbnb_availability?: AirbnbAvailabilityDto[];
 }
 
 export class RoomCalendarResponseDto {

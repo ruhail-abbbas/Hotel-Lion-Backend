@@ -112,6 +112,14 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 ### Cleaning Management ✅ *NEW*
 - `POST /api/v1/admin/cleaning/send-notifications` – Manually trigger cleaning notifications
 
+### Airbnb Calendar Integration ✅ *NEW*
+- `POST /api/v1/airbnb/calendar` – Fetch Airbnb listing calendar data via Apify API
+- `POST /api/v1/airbnb/listings` – Create/store new Airbnb listing URL for a room
+- `GET /api/v1/airbnb/listings?hotel_id=` – Get all Airbnb listings for a hotel
+- `GET /api/v1/airbnb/listings?room_id=` – Get all Airbnb listings for a specific room
+- `PUT /api/v1/airbnb/listings/:id` – Update an existing Airbnb listing
+- `DELETE /api/v1/airbnb/listings/:id` – Delete (soft delete) an Airbnb listing
+
 ## Key Workflows
 
 1. **Authentication**: Sign-in→JWT tokens→Protected access→Token refresh
@@ -150,6 +158,9 @@ BOOKING_COM_API_KEY=...
 
 # General
 OWNER_WHATSAPP_NUMBER=...
+
+# Airbnb Calendar Integration ✅
+APIFY_API_TOKEN=...
 ```
 
 ## OpenAPI Integration
