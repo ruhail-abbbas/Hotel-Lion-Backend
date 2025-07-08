@@ -68,8 +68,9 @@ model Hotel {
   updated_at            DateTime  @updatedAt
 
   // Relationships
-  rooms       Room[]
-  hotel_users HotelUsersPivot[]
+  rooms           Room[]
+  hotel_users     HotelUsersPivot[]
+  airbnb_listings AirbnbListing[]
 
   @@map("hotels")
 }
@@ -85,6 +86,26 @@ model HotelUsersPivot {
 
   @@unique([user_id, hotel_id])
   @@map("hotel_users_pivot")
+}
+
+model AirbnbListing {
+  id          String   @id @default(uuid()) @db.Uuid
+  hotel_id    String   @db.Uuid
+  room_id     String   @db.Uuid
+  listing_url String   @unique
+  title       String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relationships
+  hotel Hotel @relation(fields: [hotel_id], references: [id], onDelete: Cascade)
+  room  Room  @relation(fields: [room_id], references: [id], onDelete: Cascade)
+
+  @@index([hotel_id])
+  @@index([room_id])
+  @@index([listing_url])
+  @@map("airbnb_listings")
 }
 
 model Room {
@@ -107,12 +128,13 @@ model Room {
   updated_at        DateTime   @updatedAt
 
   // Relationships
-  hotel         Hotel         @relation(fields: [hotel_id], references: [id], onDelete: Cascade)
-  bookings      Booking[]
-  blocked_dates BlockedDate[]
-  room_photos   RoomPhoto[]
-  rate_rules    RateRule[]
-  reviews       Review[]
+  hotel           Hotel           @relation(fields: [hotel_id], references: [id], onDelete: Cascade)
+  bookings        Booking[]
+  blocked_dates   BlockedDate[]
+  room_photos     RoomPhoto[]
+  rate_rules      RateRule[]
+  reviews         Review[]
+  airbnb_listings AirbnbListing[]
 
   @@index([hotel_id])
   @@map("rooms")
