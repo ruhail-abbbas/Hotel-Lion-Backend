@@ -1775,6 +1775,177 @@
           "Cleaning"
         ]
       }
+    },
+    "/api/v1/payments/create-checkout-with-booking": {
+      "post": {
+        "description": "Create a Stripe Checkout session with all booking details. Booking will be created in database only after successful payment.",
+        "operationId": "PaymentsController_createCheckoutWithBooking",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Booking and checkout session details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCheckoutWithBookingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Checkout session created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutSessionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid booking details or room not available"
+          },
+          "500": {
+            "description": "Failed to create checkout session"
+          }
+        },
+        "summary": "Create Stripe checkout session with booking details",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/payments/create-checkout-session": {
+      "post": {
+        "description": "Create a Stripe Checkout session for a pending booking. Returns a URL to redirect the user to complete payment.",
+        "operationId": "PaymentsController_createCheckoutSession",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Checkout session details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCheckoutSessionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Checkout session created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutSessionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid booking ID or booking not in pending status"
+          },
+          "500": {
+            "description": "Failed to create checkout session"
+          }
+        },
+        "summary": "Create Stripe checkout session",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/payments/stripe-webhook": {
+      "post": {
+        "description": "Endpoint for Stripe to send webhook events. Handles payment confirmations and failures.",
+        "operationId": "PaymentsController_handleStripeWebhook",
+        "parameters": [
+          {
+            "name": "stripe-signature",
+            "required": true,
+            "in": "header",
+            "description": "Stripe webhook signature for verification",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook processed successfully"
+          },
+          "400": {
+            "description": "Invalid webhook signature or payload"
+          }
+        },
+        "summary": "Handle Stripe webhooks",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/payments/success": {
+      "get": {
+        "description": "Retrieve payment success information using the Stripe session ID. Called after successful payment redirect.",
+        "operationId": "PaymentsController_getPaymentSuccess",
+        "parameters": [
+          {
+            "name": "session_id",
+            "required": true,
+            "in": "query",
+            "description": "Stripe checkout session ID from success URL",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment success details retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentSuccessResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing session ID"
+          }
+        },
+        "summary": "Get payment success details",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/payments/cancel": {
+      "get": {
+        "description": "Endpoint called when user cancels payment. Returns information about the cancelled session.",
+        "operationId": "PaymentsController_handlePaymentCancel",
+        "parameters": [
+          {
+            "name": "session_id",
+            "required": false,
+            "in": "query",
+            "description": "Stripe checkout session ID (optional)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment cancellation handled"
+          }
+        },
+        "summary": "Handle payment cancellation",
+        "tags": [
+          "Payments"
+        ]
+      }
     }
   },
   "info": {
@@ -1805,11 +1976,11 @@
       "description": "Room inventory and availability"
     },
     {
-      "name": "bookings",
+      "name": "Bookings",
       "description": "Reservation management"
     },
     {
-      "name": "payments",
+      "name": "Payments",
       "description": "Payment processing"
     }
   ],
@@ -4055,6 +4226,158 @@
           "managers",
           "staff",
           "stats"
+        ]
+      },
+      "CreateCheckoutWithBookingDto": {
+        "type": "object",
+        "properties": {
+          "room_id": {
+            "type": "string",
+            "description": "Room ID to book",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "guest_name": {
+            "type": "string",
+            "description": "Guest full name",
+            "example": "John Doe"
+          },
+          "guest_email": {
+            "type": "string",
+            "description": "Guest email address",
+            "example": "john.doe@example.com"
+          },
+          "check_in_date": {
+            "type": "string",
+            "description": "Check-in date (YYYY-MM-DD)",
+            "example": "2025-07-15"
+          },
+          "check_out_date": {
+            "type": "string",
+            "description": "Check-out date (YYYY-MM-DD)",
+            "example": "2025-07-17"
+          },
+          "guest_contact": {
+            "type": "string",
+            "description": "Guest contact phone number (optional)",
+            "example": "+1-555-123-4567"
+          },
+          "source": {
+            "type": "string",
+            "description": "Booking source",
+            "example": "Website"
+          },
+          "adults": {
+            "type": "number",
+            "description": "Number of adults",
+            "example": 2
+          },
+          "infants": {
+            "type": "number",
+            "description": "Number of children/infants",
+            "example": 0
+          },
+          "success_url": {
+            "type": "string",
+            "description": "Success URL to redirect to after successful payment",
+            "example": "http://localhost:3000/payment/success"
+          },
+          "cancel_url": {
+            "type": "string",
+            "description": "Cancel URL to redirect to if payment is cancelled",
+            "example": "http://localhost:3000/payment/cancel"
+          }
+        },
+        "required": [
+          "room_id",
+          "guest_name",
+          "guest_email",
+          "check_in_date",
+          "check_out_date",
+          "adults",
+          "infants",
+          "success_url",
+          "cancel_url"
+        ]
+      },
+      "CheckoutSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "Stripe Checkout Session ID",
+            "example": "cs_test_a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6"
+          },
+          "checkout_url": {
+            "type": "string",
+            "description": "Stripe Checkout Session URL",
+            "example": "https://checkout.stripe.com/pay/cs_test_a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6"
+          },
+          "booking_id": {
+            "type": "string",
+            "description": "Booking ID associated with this payment session",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          }
+        },
+        "required": [
+          "session_id",
+          "checkout_url",
+          "booking_id"
+        ]
+      },
+      "CreateCheckoutSessionDto": {
+        "type": "object",
+        "properties": {
+          "booking_id": {
+            "type": "string",
+            "description": "Booking ID to create payment session for",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "success_url": {
+            "type": "string",
+            "description": "Success URL to redirect to after successful payment",
+            "example": "http://localhost:3000/payment/success"
+          },
+          "cancel_url": {
+            "type": "string",
+            "description": "Cancel URL to redirect to if payment is cancelled",
+            "example": "http://localhost:3000/payment/cancel"
+          }
+        },
+        "required": [
+          "booking_id",
+          "success_url",
+          "cancel_url"
+        ]
+      },
+      "PaymentSuccessResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Success message",
+            "example": "Payment completed successfully"
+          },
+          "booking_id": {
+            "type": "string",
+            "description": "Booking ID that was paid for",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "amount_paid": {
+            "type": "number",
+            "description": "Payment amount in cents",
+            "example": 15000
+          },
+          "payment_intent_id": {
+            "type": "string",
+            "description": "Stripe payment intent ID",
+            "example": "pi_1234567890abcdef"
+          }
+        },
+        "required": [
+          "message",
+          "booking_id",
+          "amount_paid",
+          "payment_intent_id"
         ]
       }
     }

@@ -94,15 +94,15 @@ model Room {
   description       String?
   size_sqm          Int?
   bed_setup         String?
-  base_price        Int        // Price in cents (for website/direct bookings)
-  airbnb_price      Int?       // Price in cents for Airbnb (optional - defaults to base_price if null)
-  booking_com_price Int?       // Price in cents for Booking.com (optional - defaults to base_price if null)
+  base_price        Decimal    @db.Decimal(10,2) // Price in euros (for website/direct bookings)
+  airbnb_price      Decimal?   @db.Decimal(10,2) // Price in euros for Airbnb (optional - defaults to base_price if null)
+  booking_com_price Decimal?   @db.Decimal(10,2) // Price in euros for Booking.com (optional - defaults to base_price if null)
   max_capacity      Int
   status            RoomStatus @default(available)
   amenities         Json?
-  pet_fee           Int?       // Pet fee in cents
+  pet_fee           Decimal?   @db.Decimal(10,2) // Pet fee in euros
   minimum_nights    Int?       // Minimum nights required for booking
-  cleaning_fee      Int?       // Cleaning fee in cents
+  cleaning_fee      Decimal?   @db.Decimal(10,2) // Cleaning fee in euros
   created_at        DateTime   @default(now())
   updated_at        DateTime   @updatedAt
 
@@ -127,7 +127,7 @@ model Booking {
   guest_email      String
   check_in_date    DateTime      @db.Date
   check_out_date   DateTime      @db.Date
-  total_cost       Int           // Cost in cents
+  total_cost       Decimal       @db.Decimal(10,2) // Cost in euros
   status           BookingStatus @default(pending)
   source           String?
   created_at       DateTime      @default(now())
@@ -146,7 +146,7 @@ model Booking {
 model Payment {
   id             String        @id @default(uuid()) @db.Uuid
   booking_id     String        @db.Uuid
-  amount         Int           // Amount in cents
+  amount         Decimal       @db.Decimal(10,2) // Amount in euros
   payment_method PaymentMethod
   identifier     String?
   created_at     DateTime      @default(now())
@@ -189,7 +189,7 @@ model RateRule {
   room_id         String @db.Uuid
   start_date      DateTime @db.Date
   end_date        DateTime @db.Date
-  price_per_night Int    // Price in cents
+  price_per_night Decimal @db.Decimal(10,2) // Price in euros
   min_stay_nights Int?
   day_of_week     Int[]  // Array of integers (0-6, Sunday-Saturday)
   source          String?

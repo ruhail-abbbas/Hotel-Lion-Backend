@@ -30,11 +30,13 @@ import { join } from 'path';
 // Define types for room with rate rules
 type RoomWithRateRules = {
   id: string;
-  base_price: number;
+  base_price: number | any; // Allow Decimal from Prisma
+  airbnb_price?: number | any; // Allow Decimal from Prisma
+  booking_com_price?: number | any; // Allow Decimal from Prisma
   rate_rules: {
     start_date: Date;
     end_date: Date;
-    price_per_night: number;
+    price_per_night: number | any; // Allow Decimal from Prisma
     day_of_week: number[];
   }[];
 };
@@ -74,7 +76,16 @@ export class RoomsService {
       const tomorrow = new Date(today);
       tomorrow.setDate(today.getDate() + 1);
 
-      const { totalCost } = this.calculateRoomPricing(room, today, tomorrow);
+      const { totalCost } = this.calculateRoomPricing({
+        id: room.id,
+        base_price: parseFloat(room.base_price.toString()),
+        airbnb_price: room.airbnb_price ? parseFloat(room.airbnb_price.toString()) : null,
+        booking_com_price: room.booking_com_price ? parseFloat(room.booking_com_price.toString()) : null,
+        rate_rules: room.rate_rules.map(rule => ({
+          ...rule,
+          price_per_night: parseFloat(rule.price_per_night.toString()),
+        })),
+      }, today, tomorrow);
       // For getAllRooms, we want today's rate, not the lowest rate
       const todayPrice = totalCost; // Since it's just one night (today to tomorrow)
 
@@ -85,13 +96,13 @@ export class RoomsService {
         size_sqm: room.size_sqm || 0,
         bed_setup: room.bed_setup || '',
         base_price: todayPrice,
-        airbnb_price: room.airbnb_price ?? undefined,
-        booking_com_price: room.booking_com_price ?? undefined,
+        airbnb_price: room.airbnb_price ? parseFloat(room.airbnb_price.toString()) : undefined,
+        booking_com_price: room.booking_com_price ? parseFloat(room.booking_com_price.toString()) : undefined,
         max_capacity: room.max_capacity,
         amenities: room.amenities || [],
-        pet_fee: room.pet_fee ?? undefined,
+        pet_fee: room.pet_fee ? parseFloat(room.pet_fee.toString()) : undefined,
         minimum_nights: room.minimum_nights ?? undefined,
-        cleaning_fee: room.cleaning_fee ?? undefined,
+        cleaning_fee: room.cleaning_fee ? parseFloat(room.cleaning_fee.toString()) : undefined,
         photos: room.room_photos.map((photo) => ({
           id: photo.id,
           image_url: photo.image_url,
@@ -175,7 +186,7 @@ export class RoomsService {
           check_in_date: booking.check_in_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
           check_out_date: booking.check_out_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
           status: booking.status,
-          total_cost: booking.total_cost,
+          total_cost: parseFloat(booking.total_cost.toString()),
         }),
       ),
     }));
@@ -331,14 +342,27 @@ export class RoomsService {
 
     for (const room of availableRooms) {
       const { totalCost, basePrice } = this.calculateRoomPricing(
-        room,
+        {
+          id: room.id,
+          base_price: parseFloat(room.base_price.toString()),
+          airbnb_price: room.airbnb_price ? parseFloat(room.airbnb_price.toString()) : null,
+          booking_com_price: room.booking_com_price ? parseFloat(room.booking_com_price.toString()) : null,
+          rate_rules: room.rate_rules.map(rule => ({
+            ...rule,
+            price_per_night: parseFloat(rule.price_per_night.toString()),
+          })),
+        },
         checkIn,
         checkOut,
         platform,
       );
 
       // Get platform-specific price for display
-      const platformPrice = this.getPlatformPrice(room, platform);
+      const platformPrice = this.getPlatformPrice({
+        base_price: parseFloat(room.base_price.toString()),
+        airbnb_price: room.airbnb_price ? parseFloat(room.airbnb_price.toString()) : null,
+        booking_com_price: room.booking_com_price ? parseFloat(room.booking_com_price.toString()) : null,
+      }, platform);
 
       availableRoomDtos.push({
         id: room.id,
@@ -347,15 +371,15 @@ export class RoomsService {
         size_sqm: room.size_sqm || 0,
         bed_setup: room.bed_setup || '',
         base_price: platform ? platformPrice : basePrice,
-        airbnb_price: room.airbnb_price ?? undefined,
-        booking_com_price: room.booking_com_price ?? undefined,
+        airbnb_price: room.airbnb_price ? parseFloat(room.airbnb_price.toString()) : undefined,
+        booking_com_price: room.booking_com_price ? parseFloat(room.booking_com_price.toString()) : undefined,
         total_cost: totalCost,
         nights: nights,
         max_capacity: room.max_capacity,
         amenities: room.amenities || [],
-        pet_fee: room.pet_fee ?? undefined,
+        pet_fee: room.pet_fee ? parseFloat(room.pet_fee.toString()) : undefined,
         minimum_nights: room.minimum_nights ?? undefined,
-        cleaning_fee: room.cleaning_fee ?? undefined,
+        cleaning_fee: room.cleaning_fee ? parseFloat(room.cleaning_fee.toString()) : undefined,
         photos: room.room_photos.map((photo) => ({
           id: photo.id,
           image_url: photo.image_url,
@@ -392,7 +416,11 @@ export class RoomsService {
     let lowestNightlyRate = Infinity;
 
     // Get platform-specific base price
-    const platformBasePrice = this.getPlatformPrice(room, platform);
+    const platformBasePrice = this.getPlatformPrice({
+      base_price: parseFloat(room.base_price.toString()),
+      airbnb_price: room.airbnb_price ? parseFloat(room.airbnb_price.toString()) : null,
+      booking_com_price: room.booking_com_price ? parseFloat(room.booking_com_price.toString()) : null,
+    }, platform);
 
     // If no rate rules are available, fall back to platform-specific price
     if (!room.rate_rules || room.rate_rules.length === 0) {
@@ -541,15 +569,15 @@ export class RoomsService {
       description: updatedRoom.description || '',
       size_sqm: updatedRoom.size_sqm || 0,
       bed_setup: updatedRoom.bed_setup || '',
-      base_price: updatedRoom.base_price,
-      airbnb_price: updatedRoom.airbnb_price ?? undefined,
-      booking_com_price: updatedRoom.booking_com_price ?? undefined,
+      base_price: parseFloat(updatedRoom.base_price.toString()),
+      airbnb_price: updatedRoom.airbnb_price ? parseFloat(updatedRoom.airbnb_price.toString()) : undefined,
+      booking_com_price: updatedRoom.booking_com_price ? parseFloat(updatedRoom.booking_com_price.toString()) : undefined,
       max_capacity: updatedRoom.max_capacity,
       status: updatedRoom.status,
       amenities: (updatedRoom.amenities as string[]) || [],
-      pet_fee: updatedRoom.pet_fee ?? undefined,
+      pet_fee: updatedRoom.pet_fee ? parseFloat(updatedRoom.pet_fee.toString()) : undefined,
       minimum_nights: updatedRoom.minimum_nights ?? undefined,
-      cleaning_fee: updatedRoom.cleaning_fee ?? undefined,
+      cleaning_fee: updatedRoom.cleaning_fee ? parseFloat(updatedRoom.cleaning_fee.toString()) : undefined,
       updated_at: updatedRoom.updated_at.toISOString(),
     };
   }

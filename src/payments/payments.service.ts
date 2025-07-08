@@ -87,10 +87,11 @@ export class PaymentsService {
         (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24),
       );
 
-      // Simple pricing calculation (can be enhanced with rate rules later)
-      const basePrice = room.base_price;
-      const cleaningFee = room.cleaning_fee || 0;
-      const totalCost = (basePrice * nights) + cleaningFee;
+      // All prices are now in euros (no cents)
+      const basePriceEuros = parseFloat((room.base_price || 0).toString());
+      const cleaningFeeEuros = parseFloat((room.cleaning_fee || 0).toString());
+      const totalCostEuros = (basePriceEuros * nights) + cleaningFeeEuros;
+      const totalCostCents = Math.round(totalCostEuros * 100); // Convert to cents only for Stripe
 
       // Generate a temporary booking reference for tracking
       const tempBookingRef = `TEMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -101,12 +102,12 @@ export class PaymentsService {
         line_items: [
           {
             price_data: {
-              currency: 'usd',
+              currency: 'eur',
               product_data: {
                 name: `${room.hotel.name} - Suite ${room.name}`,
                 description: `${nights} night${nights > 1 ? 's' : ''} • ${check_in_date} to ${check_out_date}`,
               },
-              unit_amount: totalCost, // Amount in cents
+              unit_amount: totalCostCents, // Amount in cents for EUR
             },
             quantity: 1,
           },
@@ -126,7 +127,7 @@ export class PaymentsService {
           source: source || 'Website',
           adults: adults.toString(),
           infants: infants.toString(),
-          total_cost: totalCost.toString(),
+          total_cost: totalCostEuros.toString(),
           hotel_name: room.hotel.name,
           room_name: room.name,
         },
@@ -218,7 +219,7 @@ export class PaymentsService {
         line_items: [
           {
             price_data: {
-              currency: 'usd',
+              currency: 'eur',
               product_data: {
                 name: `${booking.room.hotel.name} - Suite ${booking.room.name}`,
                 description: `${nights} night${nights > 1 ? 's' : ''} • ${booking.check_in_date.toISOString().split('T')[0]} to ${booking.check_out_date.toISOString().split('T')[0]}`,
@@ -230,7 +231,7 @@ export class PaymentsService {
                   nights: nights.toString(),
                 },
               },
-              unit_amount: booking.total_cost, // Amount is already in cents
+              unit_amount: Math.round(parseFloat(booking.total_cost.toString()) * 100), // Convert euros to cents for Stripe
             },
             quantity: 1,
           },
@@ -401,7 +402,7 @@ export class PaymentsService {
       const checkOutDate = new Date(metadata.check_out_date);
       const guestContact = metadata.guest_contact || null;
       const source = metadata.source || 'Website';
-      const totalCost = parseInt(metadata.total_cost);
+      const totalCost = parseFloat(metadata.total_cost);
 
       // Generate real booking reference
       const referenceNumber = await this.generateBookingReference();
@@ -451,7 +452,7 @@ export class PaymentsService {
             guest_email: guestEmail,
             check_in_date: checkInDate,
             check_out_date: checkOutDate,
-            total_cost: totalCost,
+            total_cost: parseFloat(totalCost.toFixed(2)), // Store in euros
             source: source,
             status: 'confirmed', // Directly confirmed since payment succeeded
           },
@@ -527,7 +528,7 @@ export class PaymentsService {
       return {
         message: 'Payment completed successfully',
         booking_id: bookingId,
-        amount_paid: session.amount_total || 0,
+        amount_paid: parseFloat(((session.amount_total || 0) / 100).toFixed(2)), // Convert cents to euros
         payment_intent_id: session.payment_intent as string,
       };
     } catch (error) {
