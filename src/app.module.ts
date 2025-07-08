@@ -12,6 +12,7 @@ import { RoomsModule } from './rooms/rooms.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { HotelsModule } from './hotels/hotels.module';
 import { CleaningModule } from './cleaning/cleaning.module';
+import { AirbnbModule } from './airbnb/airbnb.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { CleaningModule } from './cleaning/cleaning.module';
     BookingsModule,
     HotelsModule,
     CleaningModule,
+    AirbnbModule,
   ],
   controllers: [AppController],
   providers: [AppService],

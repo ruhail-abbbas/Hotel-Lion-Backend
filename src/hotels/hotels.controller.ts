@@ -9,6 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { HotelsService } from './hotels.service';
 import { UpdateHotelDto, HotelResponseDto } from './dto/update-hotel.dto';
+import { HotelDetailsResponseDto } from './dto/hotel-details.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -94,5 +95,40 @@ export class HotelsController {
     @Body() updateHotelDto: UpdateHotelDto,
   ): Promise<HotelResponseDto> {
     return this.hotelsService.updateHotel(hotelId, updateHotelDto);
+  }
+
+  @Get(':id/details')
+  @Roles('admin')
+  @ApiOperation({
+    summary: 'Get comprehensive hotel details',
+    description:
+      'Get detailed information about a hotel including all associated users, managers, staff, room statistics, and operational data',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Hotel UUID',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Hotel details retrieved successfully',
+    type: HotelDetailsResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Hotel not found',
+  })
+  async getHotelDetails(
+    @Param('id') hotelId: string,
+  ): Promise<HotelDetailsResponseDto> {
+    return this.hotelsService.getHotelDetails(hotelId);
   }
 }

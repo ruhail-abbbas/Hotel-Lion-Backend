@@ -1046,6 +1046,20 @@
               "example": 1,
               "type": "number"
             }
+          },
+          {
+            "name": "platform",
+            "required": false,
+            "in": "query",
+            "description": "Platform for pricing (website, airbnb, booking.com)",
+            "schema": {
+              "enum": [
+                "website",
+                "airbnb",
+                "booking.com"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1117,7 +1131,7 @@
     },
     "/api/v1/rooms/{id}/status": {
       "patch": {
-        "description": "Update room status to available, out_of_service, or cleaning",
+        "description": "Update room status to available, out_of_service, or cleaning. Requires admin authentication.",
         "operationId": "RoomsController_updateRoomStatus",
         "parameters": [
           {
@@ -1155,11 +1169,22 @@
           "400": {
             "description": "Invalid input data"
           },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
           "404": {
             "description": "Room not found"
           }
         },
-        "summary": "Update room status",
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update room status (Admin only)",
         "tags": [
           "Rooms"
         ]
@@ -1167,7 +1192,7 @@
     },
     "/api/v1/rooms/{id}": {
       "put": {
-        "description": "Update room details such as name, description, price, capacity, status, and amenities.",
+        "description": "Update room details such as name, description, price, capacity, status, and amenities. Requires admin authentication.",
         "operationId": "RoomsController_editRoom",
         "parameters": [
           {
@@ -1205,17 +1230,28 @@
           "400": {
             "description": "Invalid input data or room name already exists"
           },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
           "404": {
             "description": "Room not found"
           }
         },
-        "summary": "Edit a room",
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Edit a room (Admin only)",
         "tags": [
           "Rooms"
         ]
       },
       "delete": {
-        "description": "Delete a room from the hotel. Cannot delete rooms with active bookings.",
+        "description": "Delete a room from the hotel. Cannot delete rooms with active bookings. Requires admin authentication.",
         "operationId": "RoomsController_deleteRoom",
         "parameters": [
           {
@@ -1248,11 +1284,218 @@
           "400": {
             "description": "Cannot delete room with active bookings"
           },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
           "404": {
             "description": "Room not found"
           }
         },
-        "summary": "Delete a room",
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a room (Admin only)",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/api/v1/rooms/{id}/images": {
+      "post": {
+        "description": "Upload a new image for a room. Requires admin authentication.",
+        "operationId": "RoomsController_uploadRoomImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Room UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "sort_order": {
+                    "type": "number",
+                    "description": "Sort order for the image (optional)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Image uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomImageUploadResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid file or room not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Upload room image (Admin only)",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/api/v1/rooms/{roomId}/images/{imageId}": {
+      "delete": {
+        "description": "Delete a specific image from a room. Requires admin authentication.",
+        "operationId": "RoomsController_deleteRoomImage",
+        "parameters": [
+          {
+            "name": "roomId",
+            "required": true,
+            "in": "path",
+            "description": "Room UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "description": "Image UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Image deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "Room or image not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete room image (Admin only)",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/api/v1/rooms/{roomId}/images/{imageId}/order": {
+      "patch": {
+        "description": "Update the sort order of a room image. Requires admin authentication.",
+        "operationId": "RoomsController_updateRoomImageOrder",
+        "parameters": [
+          {
+            "name": "roomId",
+            "required": true,
+            "in": "path",
+            "description": "Room UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "description": "Image UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "New sort order for the image",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoomImageOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Image order updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomImageUploadResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "Room or image not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update room image order (Admin only)",
         "tags": [
           "Rooms"
         ]
@@ -1438,6 +1681,53 @@
         ]
       }
     },
+    "/api/v1/admin/hotels/{id}/details": {
+      "get": {
+        "description": "Get detailed information about a hotel including all associated users, managers, staff, room statistics, and operational data",
+        "operationId": "HotelsController_getHotelDetails",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Hotel UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hotel details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HotelDetailsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "Hotel not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get comprehensive hotel details",
+        "tags": [
+          "Hotels"
+        ]
+      }
+    },
     "/api/v1/admin/cleaning/send-notifications": {
       "post": {
         "description": "Manually trigger cleaning notifications for today's checkouts. Useful for testing or sending notifications outside the scheduled time.",
@@ -1511,7 +1801,7 @@
       "description": "Hotel management endpoints"
     },
     {
-      "name": "rooms",
+      "name": "Rooms",
       "description": "Room inventory and availability"
     },
     {
@@ -2499,8 +2789,20 @@
           },
           "base_price": {
             "type": "number",
-            "description": "Base price per night in cents",
+            "description": "Base price per night in cents (for website/direct bookings)",
             "example": 12000
+          },
+          "airbnb_price": {
+            "type": "number",
+            "description": "Airbnb price per night in cents",
+            "example": 13000,
+            "nullable": true
+          },
+          "booking_com_price": {
+            "type": "number",
+            "description": "Booking.com price per night in cents",
+            "example": 14000,
+            "nullable": true
           },
           "max_capacity": {
             "type": "number",
@@ -2551,6 +2853,8 @@
           "size_sqm",
           "bed_setup",
           "base_price",
+          "airbnb_price",
+          "booking_com_price",
           "max_capacity",
           "amenities",
           "pet_fee",
@@ -2616,8 +2920,20 @@
           },
           "base_price": {
             "type": "number",
-            "description": "Base price per night in cents",
+            "description": "Base price per night in cents (for website/direct bookings)",
             "example": 12000
+          },
+          "airbnb_price": {
+            "type": "number",
+            "description": "Airbnb price per night in cents",
+            "example": 13000,
+            "nullable": true
+          },
+          "booking_com_price": {
+            "type": "number",
+            "description": "Booking.com price per night in cents",
+            "example": 14000,
+            "nullable": true
           },
           "total_cost": {
             "type": "number",
@@ -2678,6 +2994,8 @@
           "size_sqm",
           "bed_setup",
           "base_price",
+          "airbnb_price",
+          "booking_com_price",
           "total_cost",
           "nights",
           "max_capacity",
@@ -2985,8 +3303,22 @@
           },
           "base_price": {
             "type": "number",
-            "description": "Base price per night in cents",
+            "description": "Base price per night in cents (for website/direct bookings)",
             "example": 12000,
+            "minimum": 100,
+            "maximum": 10000000
+          },
+          "airbnb_price": {
+            "type": "number",
+            "description": "Airbnb price per night in cents (optional - defaults to base_price if not set)",
+            "example": 13000,
+            "minimum": 100,
+            "maximum": 10000000
+          },
+          "booking_com_price": {
+            "type": "number",
+            "description": "Booking.com price per night in cents (optional - defaults to base_price if not set)",
+            "example": 14000,
             "minimum": 100,
             "maximum": 10000000
           },
@@ -3074,8 +3406,20 @@
           },
           "base_price": {
             "type": "number",
-            "description": "Base price per night in cents",
+            "description": "Base price per night in cents (for website/direct bookings)",
             "example": 12000
+          },
+          "airbnb_price": {
+            "type": "number",
+            "description": "Airbnb price per night in cents",
+            "example": 13000,
+            "nullable": true
+          },
+          "booking_com_price": {
+            "type": "number",
+            "description": "Booking.com price per night in cents",
+            "example": 14000,
+            "nullable": true
           },
           "max_capacity": {
             "type": "number",
@@ -3137,6 +3481,8 @@
           "size_sqm",
           "bed_setup",
           "base_price",
+          "airbnb_price",
+          "booking_com_price",
           "max_capacity",
           "status",
           "amenities",
@@ -3144,6 +3490,50 @@
           "minimum_nights",
           "cleaning_fee",
           "updated_at"
+        ]
+      },
+      "RoomImageUploadResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Image ID",
+            "example": "image-uuid"
+          },
+          "room_id": {
+            "type": "string",
+            "description": "Room ID",
+            "example": "room-uuid"
+          },
+          "image_url": {
+            "type": "string",
+            "description": "Image file path",
+            "example": "/uploads/rooms/room-uuid/image-uuid.jpg"
+          },
+          "sort_order": {
+            "type": "number",
+            "description": "Sort order",
+            "example": 1
+          }
+        },
+        "required": [
+          "id",
+          "room_id",
+          "image_url",
+          "sort_order"
+        ]
+      },
+      "UpdateRoomImageOrderDto": {
+        "type": "object",
+        "properties": {
+          "sort_order": {
+            "type": "number",
+            "description": "New sort order for the image",
+            "example": 2
+          }
+        },
+        "required": [
+          "sort_order"
         ]
       },
       "BookingResponseDto": {
@@ -3471,6 +3861,201 @@
             "maximum": 100
           }
         }
+      },
+      "HotelUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User ID",
+            "example": "user-uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "User email address",
+            "example": "manager@hotel-lion.com"
+          },
+          "phone": {
+            "type": "string",
+            "description": "User phone number",
+            "example": "+1234567890",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "description": "User role",
+            "enum": [
+              "admin",
+              "staff"
+            ],
+            "example": "admin"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "When the user was created",
+            "example": "2024-01-10T10:30:00.000Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "When the user was last updated",
+            "example": "2024-01-10T15:45:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "phone",
+          "role",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "HotelStatsDto": {
+        "type": "object",
+        "properties": {
+          "total_rooms": {
+            "type": "number",
+            "description": "Total number of rooms in the hotel",
+            "example": 14
+          },
+          "available_rooms": {
+            "type": "number",
+            "description": "Number of available rooms",
+            "example": 10
+          },
+          "out_of_service_rooms": {
+            "type": "number",
+            "description": "Number of rooms out of service",
+            "example": 1
+          },
+          "cleaning_rooms": {
+            "type": "number",
+            "description": "Number of rooms being cleaned",
+            "example": 3
+          },
+          "total_active_bookings": {
+            "type": "number",
+            "description": "Total active bookings (pending + confirmed)",
+            "example": 25
+          },
+          "total_users": {
+            "type": "number",
+            "description": "Total number of users associated with this hotel",
+            "example": 5
+          }
+        },
+        "required": [
+          "total_rooms",
+          "available_rooms",
+          "out_of_service_rooms",
+          "cleaning_rooms",
+          "total_active_bookings",
+          "total_users"
+        ]
+      },
+      "HotelDetailsResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Hotel ID",
+            "example": "hotel-uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Hotel name",
+            "example": "Hotel Lion"
+          },
+          "location": {
+            "type": "string",
+            "description": "Hotel location",
+            "example": "Downtown City Center"
+          },
+          "contact_info": {
+            "type": "object",
+            "description": "Hotel contact information",
+            "example": {
+              "phone": "+1234567890",
+              "email": "info@hotel-lion.com",
+              "website": "https://hotel-lion.com",
+              "currency": "USD",
+              "tax_rate": 10.5
+            },
+            "nullable": true
+          },
+          "policies": {
+            "type": "string",
+            "description": "Hotel policies",
+            "example": "Check-in: 3:00 PM, Check-out: 11:00 AM. No smoking. Pets allowed with fee.",
+            "nullable": true
+          },
+          "default_checkin_time": {
+            "type": "string",
+            "description": "Default check-in time",
+            "example": "15:00",
+            "nullable": true
+          },
+          "default_checkout_time": {
+            "type": "string",
+            "description": "Default check-out time",
+            "example": "11:00",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "When the hotel was created",
+            "example": "2024-01-01T00:00:00.000Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "When the hotel was last updated",
+            "example": "2024-01-10T15:45:00.000Z"
+          },
+          "users": {
+            "description": "All users associated with this hotel",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HotelUserDto"
+            }
+          },
+          "managers": {
+            "description": "Hotel managers (users with admin role)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HotelUserDto"
+            }
+          },
+          "staff": {
+            "description": "Hotel staff (users with staff role)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HotelUserDto"
+            }
+          },
+          "stats": {
+            "description": "Hotel statistics summary",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HotelStatsDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "location",
+          "contact_info",
+          "policies",
+          "default_checkin_time",
+          "default_checkout_time",
+          "created_at",
+          "updated_at",
+          "users",
+          "managers",
+          "staff",
+          "stats"
+        ]
       }
     }
   }

@@ -4,11 +4,19 @@ import {
   Patch,
   Delete,
   Put,
+  Post,
   Query,
   Param,
   Body,
   BadRequestException,
+  UploadedFile,
+  UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import {
   ApiTags,
   ApiOperation,
@@ -16,6 +24,8 @@ import {
   ApiQuery,
   ApiParam,
   ApiBody,
+  ApiConsumes,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { RoomsService } from './rooms.service';
 import {
@@ -28,6 +38,14 @@ import {
   RoomStatusResponseDto,
 } from './dto/update-room-status.dto';
 import { EditRoomDto, EditRoomResponseDto } from './dto/edit-room.dto';
+import {
+  UploadRoomImageDto,
+  UpdateRoomImageOrderDto,
+  RoomImageUploadResponseDto,
+} from './dto/upload-room-image.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('Rooms')
 @Controller('api/v1/rooms')
@@ -105,6 +123,14 @@ export class RoomsController {
     type: 'number',
     example: 1,
   })
+  @ApiQuery({
+    name: 'platform',
+    description: 'Platform for pricing (website, airbnb, booking.com)',
+    required: false,
+    type: 'string',
+    enum: ['website', 'airbnb', 'booking.com'],
+    example: 'website',
+  })
   @ApiResponse({
     status: 200,
     description: 'Available rooms found',
@@ -120,6 +146,7 @@ export class RoomsController {
     @Query('check_out_date') checkOutDate: string,
     @Query('guests') guests: string,
     @Query('infants') infants?: string,
+    @Query('platform') platform?: string,
   ): Promise<RoomAvailabilityResponseDto> {
     // Validate required parameters
     if (!hotelId || !checkInDate || !checkOutDate || !guests) {
@@ -189,6 +216,7 @@ export class RoomsController {
       checkOutDate,
       guestCount,
       infantCount,
+      platform,
     );
   }
 
@@ -241,9 +269,13 @@ export class RoomsController {
   }
 
   @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
-    summary: 'Update room status',
-    description: 'Update room status to available, out_of_service, or cleaning',
+    summary: 'Update room status (Admin only)',
+    description:
+      'Update room status to available, out_of_service, or cleaning. Requires admin authentication.',
   })
   @ApiParam({
     name: 'id',
@@ -264,6 +296,14 @@ export class RoomsController {
     description: 'Invalid input data',
   })
   @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
+  })
+  @ApiResponse({
     status: 404,
     description: 'Room not found',
   })
@@ -275,10 +315,13 @@ export class RoomsController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
-    summary: 'Edit a room',
+    summary: 'Edit a room (Admin only)',
     description:
-      'Update room details such as name, description, price, capacity, status, and amenities.',
+      'Update room details such as name, description, price, capacity, status, and amenities. Requires admin authentication.',
   })
   @ApiParam({
     name: 'id',
@@ -299,6 +342,14 @@ export class RoomsController {
     description: 'Invalid input data or room name already exists',
   })
   @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
+  })
+  @ApiResponse({
     status: 404,
     description: 'Room not found',
   })
@@ -310,10 +361,13 @@ export class RoomsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
-    summary: 'Delete a room',
+    summary: 'Delete a room (Admin only)',
     description:
-      'Delete a room from the hotel. Cannot delete rooms with active bookings.',
+      'Delete a room from the hotel. Cannot delete rooms with active bookings. Requires admin authentication.',
   })
   @ApiParam({
     name: 'id',
@@ -338,10 +392,202 @@ export class RoomsController {
     description: 'Cannot delete room with active bookings',
   })
   @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
+  })
+  @ApiResponse({
     status: 404,
     description: 'Room not found',
   })
   async deleteRoom(@Param('id') roomId: string): Promise<{ message: string }> {
     return this.roomsService.deleteRoom(roomId);
+  }
+
+  @Post(':id/images')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads/rooms',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = uuidv4();
+          const ext = extname(file.originalname);
+          const filename = `${uniqueSuffix}${ext}`;
+          callback(null, filename);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+          return callback(new Error('Only image files are allowed!'), false);
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+      },
+    }),
+  )
+  @ApiOperation({
+    summary: 'Upload room image (Admin only)',
+    description:
+      'Upload a new image for a room. Requires admin authentication.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiParam({
+    name: 'id',
+    description: 'Room UUID',
+    type: 'string',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+        },
+        sort_order: {
+          type: 'number',
+          description: 'Sort order for the image (optional)',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Image uploaded successfully',
+    type: RoomImageUploadResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid file or room not found',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
+  })
+  async uploadRoomImage(
+    @Param('id') roomId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() uploadDto: UploadRoomImageDto,
+  ): Promise<RoomImageUploadResponseDto> {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    return this.roomsService.uploadRoomImage(roomId, file, uploadDto);
+  }
+
+  @Delete(':roomId/images/:imageId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Delete room image (Admin only)',
+    description:
+      'Delete a specific image from a room. Requires admin authentication.',
+  })
+  @ApiParam({
+    name: 'roomId',
+    description: 'Room UUID',
+    type: 'string',
+  })
+  @ApiParam({
+    name: 'imageId',
+    description: 'Image UUID',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Image deleted successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Image deleted successfully',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Room or image not found',
+  })
+  async deleteRoomImage(
+    @Param('roomId') roomId: string,
+    @Param('imageId') imageId: string,
+  ): Promise<{ message: string }> {
+    return this.roomsService.deleteRoomImage(roomId, imageId);
+  }
+
+  @Patch(':roomId/images/:imageId/order')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Update room image order (Admin only)',
+    description:
+      'Update the sort order of a room image. Requires admin authentication.',
+  })
+  @ApiParam({
+    name: 'roomId',
+    description: 'Room UUID',
+    type: 'string',
+  })
+  @ApiParam({
+    name: 'imageId',
+    description: 'Image UUID',
+    type: 'string',
+  })
+  @ApiBody({
+    type: UpdateRoomImageOrderDto,
+    description: 'New sort order for the image',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Image order updated successfully',
+    type: RoomImageUploadResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Room or image not found',
+  })
+  async updateRoomImageOrder(
+    @Param('roomId') roomId: string,
+    @Param('imageId') imageId: string,
+    @Body() updateOrderDto: UpdateRoomImageOrderDto,
+  ): Promise<RoomImageUploadResponseDto> {
+    return this.roomsService.updateRoomImageOrder(
+      roomId,
+      imageId,
+      updateOrderDto,
+    );
   }
 }

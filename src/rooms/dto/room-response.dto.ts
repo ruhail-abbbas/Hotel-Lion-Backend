@@ -52,10 +52,24 @@ export class RoomListDto {
   bed_setup: string;
 
   @ApiProperty({
-    description: 'Base price per night in cents',
+    description: 'Base price per night in cents (for website/direct bookings)',
     example: 12000,
   })
   base_price: number;
+
+  @ApiProperty({
+    description: 'Airbnb price per night in cents',
+    example: 13000,
+    nullable: true,
+  })
+  airbnb_price?: number;
+
+  @ApiProperty({
+    description: 'Booking.com price per night in cents',
+    example: 14000,
+    nullable: true,
+  })
+  booking_com_price?: number;
 
   @ApiProperty({
     description: 'Maximum guest capacity',
@@ -173,6 +187,32 @@ export class BookingDto {
   total_cost: number;
 }
 
+export class AirbnbAvailabilityDto {
+  @ApiProperty({
+    description: 'Date in YYYY-MM-DD format',
+    example: '2025-01-08',
+  })
+  date: string;
+
+  @ApiProperty({
+    description: 'Whether the date is available on Airbnb',
+    example: true,
+  })
+  available: boolean;
+
+  @ApiProperty({
+    description: 'Whether the date is available for check-in on Airbnb',
+    example: true,
+  })
+  availableForCheckin: boolean;
+
+  @ApiProperty({
+    description: 'Whether the date is available for check-out on Airbnb',
+    example: true,
+  })
+  availableForCheckout: boolean;
+}
+
 export class RoomCalendarDto {
   @ApiProperty({
     description: 'Room ID',
@@ -197,6 +237,14 @@ export class RoomCalendarDto {
     type: [BookingDto],
   })
   bookings: BookingDto[];
+
+  @ApiProperty({
+    description:
+      'Airbnb availability data for this room (if Airbnb listings exist)',
+    type: [AirbnbAvailabilityDto],
+    required: false,
+  })
+  airbnb_availability?: AirbnbAvailabilityDto[];
 }
 
 export class RoomCalendarResponseDto {
@@ -269,10 +317,24 @@ export class AvailableRoomDto {
   bed_setup: string;
 
   @ApiProperty({
-    description: 'Base price per night in cents',
+    description: 'Base price per night in cents (for website/direct bookings)',
     example: 12000,
   })
   base_price: number;
+
+  @ApiProperty({
+    description: 'Airbnb price per night in cents',
+    example: 13000,
+    nullable: true,
+  })
+  airbnb_price?: number;
+
+  @ApiProperty({
+    description: 'Booking.com price per night in cents',
+    example: 14000,
+    nullable: true,
+  })
+  booking_com_price?: number;
 
   @ApiProperty({
     description: 'Total cost for the stay in cents',

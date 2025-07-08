@@ -2,8 +2,10 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AirbnbService } from '../airbnb/airbnb.service';
 import {
   RoomsListResponseDto,
   RoomListDto,
@@ -12,6 +14,7 @@ import {
   BookingDto,
   RoomAvailabilityResponseDto,
   AvailableRoomDto,
+  AirbnbAvailabilityDto,
 } from './dto/room-response.dto';
 import {
   UpdateRoomStatusDto,
@@ -19,6 +22,13 @@ import {
   RoomStatus,
 } from './dto/update-room-status.dto';
 import { EditRoomDto, EditRoomResponseDto } from './dto/edit-room.dto';
+import {
+  UploadRoomImageDto,
+  UpdateRoomImageOrderDto,
+  RoomImageUploadResponseDto,
+} from './dto/upload-room-image.dto';
+import { promises as fs } from 'fs';
+import { join } from 'path';
 
 // Define types for room with rate rules
 type RoomWithRateRules = {
@@ -32,9 +42,36 @@ type RoomWithRateRules = {
   }[];
 };
 
+// Define type for room with bookings (for calendar)
+type RoomWithBookings = {
+  id: string;
+  name: string;
+  status: string;
+  bookings: {
+    id: string;
+    reference_number: string;
+    guest_name: string;
+    guest_email: string;
+    check_in_date: Date;
+    check_out_date: Date;
+    status: string;
+    total_cost: number;
+  }[];
+};
+
+// Define type for room with Airbnb data
+type RoomWithAirbnb = RoomWithBookings & {
+  airbnb_availability?: AirbnbAvailabilityDto[];
+};
+
 @Injectable()
 export class RoomsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(RoomsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private airbnbService: AirbnbService,
+  ) {}
 
   async getAllRooms(hotelId: string): Promise<RoomsListResponseDto> {
     // Get all rooms with their photos and rate rules, ordered by name
@@ -78,6 +115,8 @@ export class RoomsService {
         size_sqm: room.size_sqm || 0,
         bed_setup: room.bed_setup || '',
         base_price: todayPrice,
+        airbnb_price: room.airbnb_price ?? undefined,
+        booking_com_price: room.booking_com_price ?? undefined,
         max_capacity: room.max_capacity,
         amenities: room.amenities || [],
         pet_fee: room.pet_fee ?? undefined,
@@ -152,8 +191,15 @@ export class RoomsService {
       },
     });
 
+    // Fetch Airbnb availability data for all rooms
+    const roomsWithAirbnb = await this.fetchAirbnbDataForRooms(
+      rooms,
+      startDate,
+      endDate,
+    );
+
     // Transform the data to match our DTO
-    const roomsCalendar: RoomCalendarDto[] = rooms.map((room) => ({
+    const roomsCalendar: RoomCalendarDto[] = roomsWithAirbnb.map((room) => ({
       id: room.id,
       name: room.name,
       status: room.status,
@@ -169,6 +215,7 @@ export class RoomsService {
           total_cost: booking.total_cost,
         }),
       ),
+      airbnb_availability: room.airbnb_availability || [],
     }));
 
     return {
@@ -179,6 +226,64 @@ export class RoomsService {
       total_rooms: roomsCalendar.length,
       rooms: roomsCalendar,
     };
+  }
+
+  private async fetchAirbnbDataForRooms(
+    rooms: RoomWithBookings[],
+    startDate: Date,
+    endDate: Date,
+  ): Promise<RoomWithAirbnb[]> {
+    const roomsWithAirbnb = await Promise.all(
+      rooms.map(async (room) => {
+        try {
+          // Get Airbnb listings for this room
+          const airbnbListings = await this.airbnbService.getListingsByRoom(
+            room.id,
+          );
+
+          if (airbnbListings.length === 0) {
+            return { ...room, airbnb_availability: undefined };
+          }
+
+          // Fetch calendar data for the first active listing
+          const activeListings = airbnbListings.filter(
+            (listing) => listing.is_active,
+          );
+          if (activeListings.length === 0) {
+            return { ...room, airbnb_availability: undefined };
+          }
+
+          const listing = activeListings[0]; // Use first active listing
+          const calendarResponse = await this.airbnbService.getCalendarData({
+            url: listing.listing_url,
+          });
+
+          // Filter calendar data to match the date range and format it
+          const airbnbAvailability: AirbnbAvailabilityDto[] =
+            calendarResponse.calendar
+              .filter((day) => {
+                const dayDate = new Date(day.date);
+                return dayDate >= startDate && dayDate <= endDate;
+              })
+              .map((day) => ({
+                date: day.date,
+                available: day.available,
+                availableForCheckin: day.availableForCheckin,
+                availableForCheckout: day.availableForCheckout,
+              }));
+
+          return { ...room, airbnb_availability: airbnbAvailability };
+        } catch (error) {
+          this.logger.warn(
+            `Failed to fetch Airbnb data for room ${room.id}:`,
+            error,
+          );
+          return { ...room, airbnb_availability: undefined };
+        }
+      }),
+    );
+
+    return roomsWithAirbnb;
   }
 
   async updateRoomStatus(
@@ -238,6 +343,7 @@ export class RoomsService {
     checkOutDate: string,
     guests: number,
     infants: number,
+    platform?: string,
   ): Promise<RoomAvailabilityResponseDto> {
     const checkIn = new Date(checkInDate);
     const checkOut = new Date(checkOutDate);
@@ -324,7 +430,11 @@ export class RoomsService {
         room,
         checkIn,
         checkOut,
+        platform,
       );
+
+      // Get platform-specific price for display
+      const platformPrice = this.getPlatformPrice(room, platform);
 
       availableRoomDtos.push({
         id: room.id,
@@ -332,7 +442,9 @@ export class RoomsService {
         description: room.description || '',
         size_sqm: room.size_sqm || 0,
         bed_setup: room.bed_setup || '',
-        base_price: basePrice,
+        base_price: platform ? platformPrice : basePrice,
+        airbnb_price: room.airbnb_price ?? undefined,
+        booking_com_price: room.booking_com_price ?? undefined,
         total_cost: totalCost,
         nights: nights,
         max_capacity: room.max_capacity,
@@ -370,18 +482,22 @@ export class RoomsService {
     room: RoomWithRateRules,
     checkIn: Date,
     checkOut: Date,
+    platform?: string,
   ): { totalCost: number; basePrice: number } {
     let totalCost = 0;
     let lowestNightlyRate = Infinity;
 
-    // If no rate rules are available, fall back to base_price
+    // Get platform-specific base price
+    const platformBasePrice = this.getPlatformPrice(room, platform);
+
+    // If no rate rules are available, fall back to platform-specific price
     if (!room.rate_rules || room.rate_rules.length === 0) {
       const nights = Math.ceil(
         (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24),
       );
       return {
-        totalCost: room.base_price * nights,
-        basePrice: room.base_price,
+        totalCost: platformBasePrice * nights,
+        basePrice: Math.max(platformBasePrice, room.base_price),
       };
     }
 
@@ -398,7 +514,7 @@ export class RoomsService {
     while (currentDate < checkOut) {
       const dayOfWeek = currentDate.getDay();
 
-      let applicableRate = room.base_price; // Default fallback
+      let applicableRate = platformBasePrice; // Default fallback to platform-specific price
 
       // First, apply any general rule (all days)
       const generalRule = applicableRateRules.find(
@@ -431,7 +547,7 @@ export class RoomsService {
     return {
       totalCost,
       basePrice:
-        lowestNightlyRate === Infinity ? room.base_price : lowestNightlyRate,
+        lowestNightlyRate === Infinity ? platformBasePrice : lowestNightlyRate,
     };
   }
 
@@ -472,6 +588,8 @@ export class RoomsService {
       size_sqm?: number;
       bed_setup?: string;
       base_price?: number;
+      airbnb_price?: number;
+      booking_com_price?: number;
       max_capacity?: number;
       status?: 'available' | 'out_of_service' | 'cleaning';
       amenities?: string[];
@@ -489,6 +607,10 @@ export class RoomsService {
       updateData.bed_setup = editRoomDto.bed_setup;
     if (editRoomDto.base_price !== undefined)
       updateData.base_price = editRoomDto.base_price;
+    if (editRoomDto.airbnb_price !== undefined)
+      updateData.airbnb_price = editRoomDto.airbnb_price;
+    if (editRoomDto.booking_com_price !== undefined)
+      updateData.booking_com_price = editRoomDto.booking_com_price;
     if (editRoomDto.max_capacity !== undefined)
       updateData.max_capacity = editRoomDto.max_capacity;
     if (editRoomDto.status !== undefined)
@@ -516,6 +638,8 @@ export class RoomsService {
       size_sqm: updatedRoom.size_sqm || 0,
       bed_setup: updatedRoom.bed_setup || '',
       base_price: updatedRoom.base_price,
+      airbnb_price: updatedRoom.airbnb_price ?? undefined,
+      booking_com_price: updatedRoom.booking_com_price ?? undefined,
       max_capacity: updatedRoom.max_capacity,
       status: updatedRoom.status,
       amenities: (updatedRoom.amenities as string[]) || [],
@@ -538,6 +662,7 @@ export class RoomsService {
             },
           },
         },
+        room_photos: true,
       },
     });
 
@@ -552,6 +677,16 @@ export class RoomsService {
       );
     }
 
+    // Delete associated image files
+    for (const photo of room.room_photos) {
+      try {
+        await fs.unlink(join(process.cwd(), photo.image_url));
+      } catch {
+        // Continue even if file deletion fails
+        console.warn(`Failed to delete image file: ${photo.image_url}`);
+      }
+    }
+
     // Delete the room (CASCADE will handle related records like photos, rate_rules, etc.)
     await this.prisma.room.delete({
       where: { id: roomId },
@@ -560,5 +695,150 @@ export class RoomsService {
     return {
       message: `Room ${room.name} has been successfully deleted`,
     };
+  }
+
+  async uploadRoomImage(
+    roomId: string,
+    file: Express.Multer.File,
+    uploadDto: UploadRoomImageDto,
+  ): Promise<RoomImageUploadResponseDto> {
+    // Check if room exists
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    // Get next sort order if not provided
+    let sortOrder = uploadDto.sort_order;
+    if (sortOrder === undefined) {
+      const lastPhoto = await this.prisma.roomPhoto.findFirst({
+        where: { room_id: roomId },
+        orderBy: { sort_order: 'desc' },
+      });
+      sortOrder = lastPhoto ? lastPhoto.sort_order + 1 : 1;
+    }
+
+    // Create database record
+    const photo = await this.prisma.roomPhoto.create({
+      data: {
+        room_id: roomId,
+        image_url: `/uploads/rooms/${file.filename}`,
+        sort_order: sortOrder,
+      },
+    });
+
+    return {
+      id: photo.id,
+      room_id: photo.room_id,
+      image_url: photo.image_url,
+      sort_order: photo.sort_order,
+    };
+  }
+
+  async deleteRoomImage(
+    roomId: string,
+    imageId: string,
+  ): Promise<{ message: string }> {
+    // Check if room exists
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    // Find the image
+    const photo = await this.prisma.roomPhoto.findUnique({
+      where: { id: imageId },
+    });
+
+    if (!photo || photo.room_id !== roomId) {
+      throw new NotFoundException('Image not found');
+    }
+
+    // Delete the file
+    try {
+      await fs.unlink(join(process.cwd(), photo.image_url));
+    } catch {
+      // Continue even if file deletion fails
+      console.warn(`Failed to delete image file: ${photo.image_url}`);
+    }
+
+    // Delete database record
+    await this.prisma.roomPhoto.delete({
+      where: { id: imageId },
+    });
+
+    return {
+      message: 'Image deleted successfully',
+    };
+  }
+
+  async updateRoomImageOrder(
+    roomId: string,
+    imageId: string,
+    updateOrderDto: UpdateRoomImageOrderDto,
+  ): Promise<RoomImageUploadResponseDto> {
+    // Check if room exists
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    // Find the image
+    const photo = await this.prisma.roomPhoto.findUnique({
+      where: { id: imageId },
+    });
+
+    if (!photo || photo.room_id !== roomId) {
+      throw new NotFoundException('Image not found');
+    }
+
+    // Update sort order
+    const updatedPhoto = await this.prisma.roomPhoto.update({
+      where: { id: imageId },
+      data: { sort_order: updateOrderDto.sort_order },
+    });
+
+    return {
+      id: updatedPhoto.id,
+      room_id: updatedPhoto.room_id,
+      image_url: updatedPhoto.image_url,
+      sort_order: updatedPhoto.sort_order,
+    };
+  }
+
+  /**
+   * Get platform-specific price for a room
+   * @param room - Room object with platform pricing
+   * @param platform - Platform to get pricing for
+   * @returns Price in cents for the specified platform
+   */
+  getPlatformPrice(
+    room: {
+      base_price: number;
+      airbnb_price?: number | null;
+      booking_com_price?: number | null;
+    },
+    platform?: string,
+  ): number {
+    switch (platform?.toLowerCase()) {
+      case 'airbnb':
+        return room.airbnb_price ?? room.base_price;
+      case 'booking.com':
+      case 'booking_com':
+        return room.booking_com_price ?? room.base_price;
+      case 'website':
+      case 'direct':
+      default:
+        return room.base_price;
+    }
   }
 }
