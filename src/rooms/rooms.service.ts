@@ -2,8 +2,10 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AirbnbService } from '../airbnb/airbnb.service';
 import {
   RoomsListResponseDto,
   RoomListDto,
@@ -12,6 +14,7 @@ import {
   BookingDto,
   RoomAvailabilityResponseDto,
   AvailableRoomDto,
+  AirbnbAvailabilityDto,
 } from './dto/room-response.dto';
 import {
   UpdateRoomStatusDto,
@@ -41,9 +44,36 @@ type RoomWithRateRules = {
   }[];
 };
 
+// Define type for room with bookings (for calendar)
+type RoomWithBookings = {
+  id: string;
+  name: string;
+  status: string;
+  bookings: {
+    id: string;
+    reference_number: string;
+    guest_name: string;
+    guest_email: string;
+    check_in_date: Date;
+    check_out_date: Date;
+    status: string;
+    total_cost: number;
+  }[];
+};
+
+// Define type for room with Airbnb data
+type RoomWithAirbnb = RoomWithBookings & {
+  airbnb_availability?: AirbnbAvailabilityDto[];
+};
+
 @Injectable()
 export class RoomsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(RoomsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private airbnbService: AirbnbService,
+  ) {}
 
   async getAllRooms(hotelId: string): Promise<RoomsListResponseDto> {
     // Get all rooms with their photos and rate rules, ordered by name
@@ -172,8 +202,15 @@ export class RoomsService {
       },
     });
 
+    // Fetch Airbnb availability data for all rooms
+    const roomsWithAirbnb = await this.fetchAirbnbDataForRooms(
+      rooms,
+      startDate,
+      endDate,
+    );
+
     // Transform the data to match our DTO
-    const roomsCalendar: RoomCalendarDto[] = rooms.map((room) => ({
+    const roomsCalendar: RoomCalendarDto[] = roomsWithAirbnb.map((room) => ({
       id: room.id,
       name: room.name,
       status: room.status,
@@ -189,6 +226,7 @@ export class RoomsService {
           total_cost: parseFloat(booking.total_cost.toString()),
         }),
       ),
+      airbnb_availability: room.airbnb_availability || [],
     }));
 
     return {
@@ -199,6 +237,64 @@ export class RoomsService {
       total_rooms: roomsCalendar.length,
       rooms: roomsCalendar,
     };
+  }
+
+  private async fetchAirbnbDataForRooms(
+    rooms: RoomWithBookings[],
+    startDate: Date,
+    endDate: Date,
+  ): Promise<RoomWithAirbnb[]> {
+    const roomsWithAirbnb = await Promise.all(
+      rooms.map(async (room) => {
+        try {
+          // Get Airbnb listings for this room
+          const airbnbListings = await this.airbnbService.getListingsByRoom(
+            room.id,
+          );
+
+          if (airbnbListings.length === 0) {
+            return { ...room, airbnb_availability: undefined };
+          }
+
+          // Fetch calendar data for the first active listing
+          const activeListings = airbnbListings.filter(
+            (listing) => listing.is_active,
+          );
+          if (activeListings.length === 0) {
+            return { ...room, airbnb_availability: undefined };
+          }
+
+          const listing = activeListings[0]; // Use first active listing
+          const calendarResponse = await this.airbnbService.getCalendarData({
+            url: listing.listing_url,
+          });
+
+          // Filter calendar data to match the date range and format it
+          const airbnbAvailability: AirbnbAvailabilityDto[] =
+            calendarResponse.calendar
+              .filter((day) => {
+                const dayDate = new Date(day.date);
+                return dayDate >= startDate && dayDate <= endDate;
+              })
+              .map((day) => ({
+                date: day.date,
+                available: day.available,
+                availableForCheckin: day.availableForCheckin,
+                availableForCheckout: day.availableForCheckout,
+              }));
+
+          return { ...room, airbnb_availability: airbnbAvailability };
+        } catch (error) {
+          this.logger.warn(
+            `Failed to fetch Airbnb data for room ${room.id}:`,
+            error,
+          );
+          return { ...room, airbnb_availability: undefined };
+        }
+      }),
+    );
+
+    return roomsWithAirbnb;
   }
 
   async updateRoomStatus(
@@ -429,7 +525,7 @@ export class RoomsService {
       );
       return {
         totalCost: platformBasePrice * nights,
-        basePrice: platformBasePrice,
+        basePrice: Math.max(platformBasePrice, room.base_price),
       };
     }
 
