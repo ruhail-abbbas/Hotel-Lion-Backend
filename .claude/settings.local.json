@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(npx prettier:*)",
-      "Bash(npx ts-node:*)"
+      "Bash(npx ts-node:*)",
+      "Bash(find:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma migrate reset:*)",
+      "Bash(npx prisma:*)",
+      "Bash(pnpm run:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

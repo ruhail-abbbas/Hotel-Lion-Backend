@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { WhatsAppService } from '../whatsapp/whatsapp.service';
 import { ConfigService } from '@nestjs/config';
+import { UserRole } from '@prisma/client';
 
 // Type definitions for the booking data
 type BookingWithRoom = {
@@ -28,7 +29,7 @@ export class CleaningService {
     private configService: ConfigService,
   ) {}
 
-  @Cron('30 9 * * *', {
+  @Cron('27 6 * * *', {
     name: 'daily-cleaning-notifications',
     timeZone: 'America/New_York', // Adjust timezone as needed
   })
@@ -69,12 +70,12 @@ export class CleaningService {
         `Found ${checkoutsToday.length} checkout(s) for today: ${checkoutsToday.map((b) => b.room.name).join(', ')}`,
       );
 
-      // Get cleaning staff phone numbers from environment
-      const cleaningStaffNumbers = this.getCleaningStaffNumbers();
+      // Get cleaning staff from database
+      const cleaningStaff = await this.getCleaningStaff();
 
-      if (cleaningStaffNumbers.length === 0) {
+      if (cleaningStaff.length === 0) {
         this.logger.warn(
-          'No cleaning staff phone numbers configured. Add CLEANING_STAFF_NUMBERS to environment variables.',
+          'No cleaning staff found in database. Please add users with "cleaning" role.',
         );
         return;
       }
@@ -86,10 +87,10 @@ export class CleaningService {
       for (const [hotelName, hotelCheckouts] of Object.entries(
         checkoutsByHotel,
       )) {
-        await this.sendHotelCleaningNotifications(
+        await this.sendDividedCleaningNotifications(
           hotelName,
           hotelCheckouts,
-          cleaningStaffNumbers,
+          cleaningStaff,
         );
       }
 
@@ -102,17 +103,34 @@ export class CleaningService {
     }
   }
 
-  private getCleaningStaffNumbers(): string[] {
-    const numbersStr = this.configService.get<string>('CLEANING_STAFF_NUMBERS');
-    if (!numbersStr) {
+  private async getCleaningStaff(): Promise<
+    { id: string; email: string; phone: string }[]
+  > {
+    try {
+      const cleaningStaff = await this.prisma.user.findMany({
+        where: {
+          role: UserRole.cleaning,
+        },
+        select: {
+          id: true,
+          email: true,
+          phone: true,
+        },
+      });
+
+      return cleaningStaff.filter(
+        (staff): staff is { id: string; email: string; phone: string } =>
+          staff.phone !== null && staff.phone.length > 0,
+      );
+    } catch (error) {
+      this.logger.error('Error fetching cleaning staff:', error);
       return [];
     }
+  }
 
-    // Parse comma-separated phone numbers
-    return numbersStr
-      .split(',')
-      .map((num) => num.trim())
-      .filter((num) => num.length > 0);
+  private async getCleaningStaffNumbers(): Promise<string[]> {
+    const cleaningStaff = await this.getCleaningStaff();
+    return cleaningStaff.map((staff) => staff.phone);
   }
 
   private groupCheckoutsByHotel(
@@ -131,28 +149,40 @@ export class CleaningService {
     );
   }
 
-  private async sendHotelCleaningNotifications(
+  private async sendDividedCleaningNotifications(
     hotelName: string,
     checkouts: BookingWithRoom[],
-    staffNumbers: string[],
+    cleaningStaff: { id: string; email: string; phone: string }[],
   ) {
     const today = new Date().toLocaleDateString();
 
-    // Create room list with guest info and checkout times
-    const roomDetails = checkouts
-      .map((checkout) => {
-        const roomName = checkout.room.name;
-        const guestName = checkout.guest_name;
-        const checkoutTime = '11:00 AM'; // Default checkout time
-        return `• Room ${roomName} - ${guestName} (checkout: ${checkoutTime})`;
-      })
-      .join('\n');
+    // Divide rooms among cleaning staff
+    const roomAssignments = this.divideRoomsAmongStaff(
+      checkouts,
+      cleaningStaff,
+    );
 
-    const message = `🧹 CLEANING SCHEDULE - ${today}
+    // Send personalized notifications to each staff member
+    const sendPromises = cleaningStaff.map(async (staff) => {
+      const assignedRooms = roomAssignments[staff.id];
+      if (assignedRooms.length === 0) return;
+
+      // Create room list with guest info and checkout times
+      const roomDetails = assignedRooms
+        .map((checkout) => {
+          const roomName = checkout.room.name;
+          const guestName = checkout.guest_name;
+          const checkoutTime = '11:00 AM'; // Default checkout time
+          return `• Room ${roomName} - ${guestName} (checkout: ${checkoutTime})`;
+        })
+        .join('\n');
+
+      const message = `🧹 CLEANING ASSIGNMENT - ${today}
 
 🏨 ${hotelName}
+👤 Staff: ${staff.email}
 
-📋 Rooms to clean today:
+📋 Your assigned rooms (${assignedRooms.length} room${assignedRooms.length > 1 ? 's' : ''}):
 ${roomDetails}
 
 ⏰ Standard cleaning checklist:
@@ -169,22 +199,41 @@ Please confirm completion by replying to this message.
 
 Hotel Lion Management 🦁`;
 
-    // Send to all cleaning staff
-    const sendPromises = staffNumbers.map(async (phoneNumber) => {
       try {
-        await this.whatsAppService.sendMessage(phoneNumber, message);
+        await this.whatsAppService.sendMessage(staff.phone, message);
         this.logger.log(
-          `✅ Cleaning notification sent to ${phoneNumber} for ${hotelName}`,
+          `✅ Sent cleaning assignment to ${staff.email} (${assignedRooms.length} rooms)`,
         );
       } catch (error) {
         this.logger.error(
-          `❌ Failed to send notification to ${phoneNumber}:`,
+          `❌ Failed to send cleaning assignment to ${staff.email}:`,
           error,
         );
       }
     });
 
     await Promise.all(sendPromises);
+  }
+
+  private divideRoomsAmongStaff(
+    checkouts: BookingWithRoom[],
+    cleaningStaff: { id: string; email: string; phone: string }[],
+  ): Record<string, BookingWithRoom[]> {
+    const assignments: Record<string, BookingWithRoom[]> = {};
+
+    // Initialize assignments for each staff member
+    cleaningStaff.forEach((staff) => {
+      assignments[staff.id] = [];
+    });
+
+    // Distribute rooms evenly among staff
+    checkouts.forEach((checkout, index) => {
+      const staffIndex = index % cleaningStaff.length;
+      const staffId = cleaningStaff[staffIndex].id;
+      assignments[staffId].push(checkout);
+    });
+
+    return assignments;
   }
 
   // Manual trigger endpoint for testing

@@ -14,7 +14,7 @@ datasource db {
 // Enums
 enum UserRole {
   admin
-  staff
+  cleaning
 }
 
 enum PaymentMethod {
@@ -187,7 +187,7 @@ model RateRule {
   room_id         String @db.Uuid
   start_date      DateTime @db.Date
   end_date        DateTime @db.Date
-  price_per_night Int    // Price in cents
+  price_per_night Int    // Premium amount in cents (added to base price)
   min_stay_nights Int?
   day_of_week     Int[]  // Array of integers (0-6, Sunday-Saturday)
   source          String?
