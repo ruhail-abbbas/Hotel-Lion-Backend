@@ -109,14 +109,14 @@ export class StatsService {
       },
     });
 
-    const totalRevenue = revenueData._sum.total_cost || 0;
+    const totalRevenue = parseFloat((revenueData._sum.total_cost || 0).toString()); // Convert Decimal to number
     const bookingCount = revenueData._count.id;
     const averageBookingValue =
-      bookingCount > 0 ? Math.round(totalRevenue / bookingCount) : 0;
+      bookingCount > 0 ? parseFloat((totalRevenue / bookingCount).toFixed(2)) : 0;
 
     return {
       month: `${year}-${month.toString().padStart(2, '0')}`,
-      total_revenue: totalRevenue,
+      total_revenue: parseFloat(totalRevenue.toFixed(2)),
       booking_count: bookingCount,
       average_booking_value: averageBookingValue,
     };
@@ -190,18 +190,18 @@ export class StatsService {
       occupiedRoomNights += Math.max(0, nights);
     });
 
-    const totalRevenue = revenueData._sum.total_cost || 0;
-    const adrCents =
+    const totalRevenue = parseFloat((revenueData._sum.total_cost || 0).toString()); // Convert Decimal to number
+    const adrEuros =
       occupiedRoomNights > 0
-        ? Math.round(totalRevenue / occupiedRoomNights)
+        ? parseFloat((totalRevenue / occupiedRoomNights).toFixed(2))
         : 0;
 
     return {
       start_date: startDate,
       end_date: endDate,
-      total_revenue: totalRevenue,
+      total_revenue: parseFloat(totalRevenue.toFixed(2)),
       occupied_room_nights: occupiedRoomNights,
-      adr_cents: adrCents,
+      adr_cents: adrEuros, // Still named adr_cents but contains euros
     };
   }
 
@@ -335,7 +335,7 @@ export class StatsService {
         room_name: booking.room.name,
         check_in_date: booking.check_in_date.toISOString().split('T')[0],
         check_out_date: booking.check_out_date.toISOString().split('T')[0],
-        total_cost: booking.total_cost,
+        total_cost: parseFloat(booking.total_cost.toString()), // Convert Decimal to number
         nights,
       };
     });
@@ -431,7 +431,7 @@ export class StatsService {
           guest_contact: booking.guest_contact || undefined,
           check_in_date: booking.check_in_date.toISOString().split('T')[0],
           check_out_date: booking.check_out_date.toISOString().split('T')[0],
-          total_cost: booking.total_cost,
+          total_cost: parseFloat(booking.total_cost.toString()), // Convert Decimal to number
           nights,
           booking_status: booking.status,
         };
@@ -442,7 +442,7 @@ export class StatsService {
         room_name: room.name,
         room_description: room.description || '',
         max_capacity: room.max_capacity,
-        base_price: room.base_price,
+        base_price: parseFloat(room.base_price.toString()), // Convert Decimal to number
         room_status: room.status,
         booking_status: bookingStatus,
         booking: currentBooking,
@@ -519,7 +519,7 @@ export class StatsService {
       const customer = customerMap.get(email);
 
       // Update customer totals
-      customer.total_spent += booking.total_cost;
+      customer.total_spent += parseFloat(booking.total_cost.toString()); // Convert Decimal to number
 
       // Update booking dates
       if (booking.created_at < customer.first_booking_date) {
@@ -543,7 +543,7 @@ export class StatsService {
         room_name: booking.room.name,
         check_in_date: booking.check_in_date.toISOString().split('T')[0],
         check_out_date: booking.check_out_date.toISOString().split('T')[0],
-        total_cost: booking.total_cost,
+        total_cost: parseFloat(booking.total_cost.toString()), // Convert Decimal to number
         nights,
         status: booking.status,
         source: booking.source || 'Website',
@@ -558,7 +558,7 @@ export class StatsService {
         name: customer.name,
         contact: customer.contact,
         total_bookings: customer.bookings.length,
-        total_spent: customer.total_spent,
+        total_spent: parseFloat(customer.total_spent.toFixed(2)), // Ensure proper euro formatting
         first_booking_date: customer.first_booking_date.toISOString(),
         last_booking_date: customer.last_booking_date.toISOString(),
         bookings: customer.bookings.sort(
@@ -574,7 +574,7 @@ export class StatsService {
 
     // Calculate total revenue (including all bookings to match individual customer totals)
     const totalRevenue = bookings.reduce(
-      (sum, booking) => sum + booking.total_cost,
+      (sum, booking) => sum + parseFloat(booking.total_cost.toString()), // Convert Decimal to number
       0,
     );
 
@@ -601,8 +601,8 @@ export class StatsService {
       returning_customers_percentage:
         Math.round(returningCustomersPercentage * 100) / 100, // Round to 2 decimal places
       total_bookings: totalBookings,
-      total_revenue: totalRevenue,
-      average_customer_value: Math.round(averageCustomerValue),
+      total_revenue: parseFloat(totalRevenue.toFixed(2)),
+      average_customer_value: parseFloat(averageCustomerValue.toFixed(2)),
       customers,
     };
   }
@@ -655,7 +655,7 @@ export class StatsService {
         room_name: booking.room.name,
         check_in_date: booking.check_in_date.toISOString().split('T')[0],
         check_out_date: booking.check_out_date.toISOString().split('T')[0],
-        total_cost: booking.total_cost,
+        total_cost: parseFloat(booking.total_cost.toString()), // Convert Decimal to number
         nights,
       };
     });
@@ -748,7 +748,7 @@ export class StatsService {
           booking.check_in_date >= startDate &&
           booking.check_in_date <= endDate
         ) {
-          monthlyRevenue += booking.total_cost;
+          monthlyRevenue += parseFloat(booking.total_cost.toString()); // Convert Decimal to number
         }
       });
 
@@ -775,7 +775,7 @@ export class StatsService {
         occupied_room_nights: occupiedRoomNights,
         occupancy_rate: Math.round(occupancyRate * 100) / 100,
         total_bookings: monthlyBookings,
-        total_revenue: monthlyRevenue,
+        total_revenue: parseFloat(monthlyRevenue.toFixed(2)), // Format euros properly
       });
 
       totalYearlyRevenue += monthlyRevenue;
@@ -791,7 +791,7 @@ export class StatsService {
       hotel_id: hotelId,
       total_rooms: totalRooms,
       average_occupancy_rate: Math.round(averageOccupancyRate * 100) / 100,
-      total_yearly_revenue: totalYearlyRevenue,
+      total_yearly_revenue: parseFloat(totalYearlyRevenue.toFixed(2)), // Format euros properly
       months: monthlyData,
     };
   }

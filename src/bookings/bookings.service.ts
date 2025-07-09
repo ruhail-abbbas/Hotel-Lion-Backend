@@ -51,7 +51,7 @@ export class BookingsService {
       check_out_date: booking.check_out_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
       status: booking.status,
       source: booking.source || undefined,
-      total_cost: booking.total_cost,
+      total_cost: parseFloat(booking.total_cost.toString()),
       created_at: booking.created_at.toISOString(),
       updated_at: booking.updated_at.toISOString(),
     }));
@@ -155,7 +155,7 @@ export class BookingsService {
       check_out_date: booking.check_out_date.toISOString().split('T')[0],
       status: booking.status,
       source: booking.source || undefined,
-      total_cost: booking.total_cost,
+      total_cost: parseFloat(booking.total_cost.toString()),
       created_at: booking.created_at.toISOString(),
       updated_at: booking.updated_at.toISOString(),
     };
