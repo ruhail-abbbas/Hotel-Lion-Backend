@@ -31,6 +31,7 @@ import { AirbnbModule } from './airbnb/airbnb.module';
     CleaningModule,
     PaymentsModule,
     AirbnbModule,
+
   ],
   controllers: [AppController],
   providers: [AppService],
