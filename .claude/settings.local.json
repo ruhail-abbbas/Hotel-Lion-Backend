@@ -10,6 +10,15 @@
       "Bash(npx prisma:*)",
       "Bash(pnpm run:*)",
       "Bash(grep:*)"
+      "Bash(pnpm add:*)",
+      "Bash(mkdir:*)",
+      "Bash(pnpm run lint:*)",
+      "Bash(pnpm run:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(psql:*)",
+      "Bash(PGPASSWORD=newpassword psql:*)"
     ],
     "deny": []
   }

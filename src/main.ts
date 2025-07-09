@@ -1,9 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+  });
+
+  // Global validation pipe
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
+
+  // Serve static files from uploads directory
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   // Enable CORS
   app.enableCors({
@@ -36,9 +53,9 @@ async function bootstrap() {
     .addTag('User Management', 'Admin user management endpoints')
     .addTag('WhatsApp', 'WhatsApp messaging via Twilio')
     .addTag('hotels', 'Hotel management endpoints')
-    .addTag('rooms', 'Room inventory and availability')
-    .addTag('bookings', 'Reservation management')
-    .addTag('payments', 'Payment processing')
+    .addTag('Rooms', 'Room inventory and availability')
+    .addTag('Bookings', 'Reservation management')
+    .addTag('Payments', 'Payment processing')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
