@@ -52,13 +52,25 @@ async function main() {
     console.log('🏨 Hotel already exists:', hotel.name);
   }
 
-  // Create admin user
+  // Create admin user and cleaning staff
   const users = [
     {
       email: 'admin@hotel-lion.com',
       password: 'admin123',
       role: UserRole.admin,
       phone: '+1-555-ADMIN-01',
+    },
+    {
+      email: 'cleaning1@hotel-lion.com',
+      password: 'cleaning123',
+      role: UserRole.cleaning,
+      phone: '+923335037773',
+    },
+    {
+      email: 'cleaning2@hotel-lion.com',
+      password: 'cleaning123',
+      role: UserRole.cleaning,
+      phone: '+923335037773',
     },
   ];
 
@@ -259,26 +271,24 @@ async function main() {
       const startDate = new Date('2025-01-01');
       const endDate = new Date('2026-12-31');
 
-      // Set pricing based on room type
-      const pricePerNight = roomData.price; // Use the price from roomData
-
+      // No default premium (0 means no change to base price)
       await prisma.rateRule.create({
         data: {
           room_id: room.id,
           start_date: startDate,
           end_date: endDate,
-          price_per_night: pricePerNight,
+          price_per_night: 0, // No premium for default days
           min_stay_nights: 1,
-          day_of_week: [0, 1, 2, 3, 4, 5, 6], // All days of the week
+          day_of_week: [0, 1, 2, 3, 4], // Sunday through Thursday
           source: 'website',
         },
       });
       console.log(
-        `✅ Created default rate rule for room: ${roomData.name} - $${pricePerNight / 100}/night`,
+        `✅ Created default rate rule for room: ${roomData.name} - $${roomData.price / 100}/night (base price)`,
       );
 
       // Create weekend premium rate rule (Friday & Saturday)
-      const weekendPremium = Math.round(pricePerNight * 1.2); // 20% premium for weekends
+      const weekendPremium = Math.round(roomData.price * 0.2); // 20% premium for weekends
 
       await prisma.rateRule.create({
         data: {
@@ -292,7 +302,7 @@ async function main() {
         },
       });
       console.log(
-        `✅ Created weekend rate rule for room: ${roomData.name} - $${weekendPremium / 100}/night (Fri-Sat)`,
+        `✅ Created weekend rate rule for room: ${roomData.name} - $${(roomData.price + weekendPremium) / 100}/night (Fri-Sat)`,
       );
     } else {
       createdRooms.push(existingRoom);
@@ -378,17 +388,17 @@ async function main() {
       });
 
       if (!existingRateRule) {
-        // Different pricing strategy per source
-        let priceMultiplier = 1.0;
-        if (source === 'Airbnb') priceMultiplier = 1.15;
-        if (source === 'Booking.com') priceMultiplier = 1.25;
+        // Different pricing strategy per source - now using premiums
+        let premiumAmount = 0;
+        if (source === 'Airbnb') premiumAmount = Math.round(room.base_price * 0.15); // 15% premium
+        if (source === 'Booking.com') premiumAmount = Math.round(room.base_price * 0.25); // 25% premium
 
         await prisma.rateRule.create({
           data: {
             room_id: room.id,
             start_date: startDate,
             end_date: endDate,
-            price_per_night: Math.round(room.base_price * priceMultiplier),
+            price_per_night: premiumAmount,
             min_stay_nights: source === 'Website' ? 1 : 2,
             day_of_week: [0, 1, 2, 3, 4, 5, 6], // All days
             source: source,
@@ -592,7 +602,7 @@ async function main() {
   console.log('\n🎉 Comprehensive seed completed successfully!');
   console.log('\n📊 Summary:');
   console.log(`   Hotel: ${hotel.name}`);
-  console.log(`   Users: ${users.length} (1 admin)`);
+  console.log(`   Users: ${users.length} (1 admin, 2 cleaning)`);
   console.log(
     `   Rooms: ${roomsData.length} (6 luxury/penthouse, 8 standard/deluxe)`,
   );
@@ -601,9 +611,10 @@ async function main() {
   console.log(`   Rate Rules: 3 sources per room`);
   console.log(`   Photos: 2-4 per room`);
   console.log(`   Blocked Dates: 5 maintenance dates`);
-  console.log('\n🔐 Admin Credentials:');
-  console.log('   Email: admin@hotel-lion.com');
-  console.log('   Password: admin123');
+  console.log('\n🔐 Login Credentials:');
+  console.log('   Admin: admin@hotel-lion.com / admin123');
+  console.log('   Cleaning: cleaning1@hotel-lion.com / cleaning123');
+  console.log('   Cleaning: cleaning2@hotel-lion.com / cleaning123');
 }
 
 main()

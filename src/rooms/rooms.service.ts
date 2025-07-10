@@ -544,12 +544,12 @@ export class RoomsService {
 
       let applicableRate = platformBasePrice; // Default fallback to platform-specific price
 
-      // First, apply any general rule (all days)
+      // First, apply any general rule (all days) - add premium to base price
       const generalRule = applicableRateRules.find(
         (rule) => rule.day_of_week.length === 7,
       );
       if (generalRule) {
-        applicableRate = generalRule.price_per_night;
+        applicableRate = room.base_price + generalRule.price_per_night;
       }
 
       // Then, check for day-specific rules (they override general rules)
@@ -559,10 +559,11 @@ export class RoomsService {
       );
 
       if (daySpecificRules.length > 0) {
-        // Use the highest price among day-specific rules (weekend premiums)
-        applicableRate = Math.max(
+        // Use the highest premium among day-specific rules (weekend premiums)
+        const highestPremium = Math.max(
           ...daySpecificRules.map((rule) => rule.price_per_night),
         );
+        applicableRate = room.base_price + highestPremium;
       }
 
       totalCost += applicableRate;
