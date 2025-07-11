@@ -1,6 +1,8 @@
 {
   "permissions": {
     "allow": [
+
+      "Bash(mkdir:*)"
       "Bash(ls:*)",
       "Bash(npx prisma migrate:*)",
       "Bash(npx prisma generate:*)",
@@ -14,6 +16,7 @@
       "Bash(pnpm prisma:*)",
       "Bash(npx prisma db pull:*)",
       "Bash(grep:*)"
+
     ],
     "deny": []
   }

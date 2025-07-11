@@ -15,6 +15,10 @@ import { CleaningModule } from './cleaning/cleaning.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AirbnbModule } from './airbnb/airbnb.module';
 
+import { RateRulesModule } from './rate-rules/rate-rules.module';
+import { MonitoringModule } from './monitoring/monitoring.module';
+
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -30,6 +34,9 @@ import { AirbnbModule } from './airbnb/airbnb.module';
     CleaningModule,
     PaymentsModule,
     AirbnbModule,
+
+    RateRulesModule,
+    MonitoringModule,
   ],
   controllers: [AppController],
   providers: [AppService],

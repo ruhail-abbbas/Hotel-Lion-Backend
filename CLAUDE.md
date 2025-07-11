@@ -112,6 +112,13 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 ### Cleaning Management ✅ *NEW*
 - `POST /api/v1/admin/cleaning/send-notifications` – Manually trigger cleaning notifications
 
+### Rate Rules Management (Admin only) ✅ *NEW*
+- `POST /api/v1/rate-rules` – Create new premium rate rule
+- `GET /api/v1/rate-rules?room_id=&hotel_id=&source=` – List rate rules with filtering
+- `GET /api/v1/rate-rules/:id` – Get specific rate rule details
+- `PUT /api/v1/rate-rules/:id` – Update existing rate rule
+- `DELETE /api/v1/rate-rules/:id` – Delete rate rule
+
 ### Airbnb Calendar Integration ✅ *NEW*
 - `POST /api/v1/airbnb/calendar` – Fetch Airbnb listing calendar data via Apify API
 - `POST /api/v1/airbnb/listings` – Create/store new Airbnb listing URL for a room
@@ -119,6 +126,36 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 - `GET /api/v1/airbnb/listings?room_id=` – Get all Airbnb listings for a specific room
 - `PUT /api/v1/airbnb/listings/:id` – Update an existing Airbnb listing
 - `DELETE /api/v1/airbnb/listings/:id` – Delete (soft delete) an Airbnb listing
+
+### Performance Monitoring (Admin only) ✅ *NEW*
+- `GET /api/v1/admin/monitoring/performance/overview` – Performance overview and health status
+- `GET /api/v1/admin/monitoring/performance/operations` – Slowest operations statistics
+- `GET /api/v1/admin/monitoring/performance/endpoints` – Endpoint performance metrics
+- `GET /api/v1/admin/monitoring/performance/operation/:operation` – Specific operation stats
+- `GET /api/v1/admin/monitoring/database/metrics` – Database performance metrics
+- `GET /api/v1/admin/monitoring/health` – System health status
+- `GET /api/v1/admin/monitoring/cleanup` – Cleanup old performance metrics
+
+## API Path Structure & Design Decisions
+
+### Rate Rules Path Decision ✅
+**Path**: `/api/v1/rate-rules` (NOT `/api/v1/admin/rate-rules`)
+
+**Rationale**:
+- Admin-only access enforced via JWT authentication + role guards (`@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles('admin')`)
+- Maintains RESTful design principles
+- Consistent with resource-based API architecture
+- Avoids redundant path prefixes when security is handled at middleware level
+
+**Frontend Integration Note**: 
+- Frontend must use `/api/v1/rate-rules` for all rate rule operations
+- Supported query parameters: `room_id`, `hotel_id`, `source`
+- Authentication required: Bearer JWT token with admin role
+
+### Architectural Consistency
+- **Resource-based paths**: `/api/v1/{resource}` for business entities
+- **Admin-specific operations**: `/api/v1/admin/{operation}` for administrative functions
+- **Security**: Authentication/authorization handled by guards, not path structure
 
 ## Key Workflows
 
