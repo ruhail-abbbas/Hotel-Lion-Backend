@@ -27,7 +27,7 @@ export class RateRuleResponseDto {
 
   @ApiProperty({
     description: 'Premium amount in Euros to add to base price',
-    example: 25.00,
+    example: 25.0,
   })
   price_per_night: number;
 
@@ -39,7 +39,8 @@ export class RateRuleResponseDto {
   min_stay_nights?: number;
 
   @ApiProperty({
-    description: 'Array of days of the week this rule applies to (0=Sunday, 1=Monday, ..., 6=Saturday)',
+    description:
+      'Array of days of the week this rule applies to (0=Sunday, 1=Monday, ..., 6=Saturday)',
     example: [5, 6],
     type: [Number],
   })

@@ -98,7 +98,7 @@ export class RoomsController {
             hotel_id: '123e4567-e89b-12d3-a456-426614174000',
             name: 'Y1A',
             description: 'Cozy single room with city view',
-            base_price: 120.00,
+            base_price: 120.0,
             max_capacity: 2,
           }),
         },
@@ -142,8 +142,9 @@ export class RoomsController {
     // Parse JSON data
     let createRoomDto: CreateRoomDto;
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       createRoomDto = JSON.parse(data);
-    } catch (error) {
+    } catch {
       throw new BadRequestException('Invalid JSON data format');
     }
 

@@ -53,20 +53,20 @@ export class RoomListDto {
 
   @ApiProperty({
     description: 'Base price per night in Euros (for website/direct bookings)',
-    example: 120.00,
+    example: 120.0,
   })
   base_price: number;
 
   @ApiProperty({
     description: 'Airbnb price per night in Euros',
-    example: 130.00,
+    example: 130.0,
     nullable: true,
   })
   airbnb_price?: number;
 
   @ApiProperty({
     description: 'Booking.com price per night in Euros',
-    example: 140.00,
+    example: 140.0,
     nullable: true,
   })
   booking_com_price?: number;
@@ -91,7 +91,7 @@ export class RoomListDto {
 
   @ApiProperty({
     description: 'Pet fee in Euros',
-    example: 25.00,
+    example: 25.0,
     nullable: true,
   })
   pet_fee?: number;
@@ -105,7 +105,7 @@ export class RoomListDto {
 
   @ApiProperty({
     description: 'Cleaning fee in Euros',
-    example: 50.00,
+    example: 50.0,
     nullable: true,
   })
   cleaning_fee?: number;
@@ -182,7 +182,7 @@ export class BookingDto {
 
   @ApiProperty({
     description: 'Total cost in Euros',
-    example: 360.00,
+    example: 360.0,
   })
   total_cost: number;
 }
@@ -318,27 +318,27 @@ export class AvailableRoomDto {
 
   @ApiProperty({
     description: 'Base price per night in Euros (for website/direct bookings)',
-    example: 120.00,
+    example: 120.0,
   })
   base_price: number;
 
   @ApiProperty({
     description: 'Airbnb price per night in Euros',
-    example: 130.00,
+    example: 130.0,
     nullable: true,
   })
   airbnb_price?: number;
 
   @ApiProperty({
     description: 'Booking.com price per night in Euros',
-    example: 140.00,
+    example: 140.0,
     nullable: true,
   })
   booking_com_price?: number;
 
   @ApiProperty({
     description: 'Total cost for the stay in Euros',
-    example: 360.00,
+    example: 360.0,
   })
   total_cost: number;
 
@@ -368,7 +368,7 @@ export class AvailableRoomDto {
 
   @ApiProperty({
     description: 'Pet fee in Euros',
-    example: 25.00,
+    example: 25.0,
     nullable: true,
   })
   pet_fee?: number;
@@ -382,7 +382,7 @@ export class AvailableRoomDto {
 
   @ApiProperty({
     description: 'Cleaning fee in Euros',
-    example: 50.00,
+    example: 50.0,
     nullable: true,
   })
   cleaning_fee?: number;

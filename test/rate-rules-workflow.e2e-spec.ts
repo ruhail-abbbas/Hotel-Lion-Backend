@@ -57,7 +57,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         hotel_id: testHotel.id,
         name: 'Rate Rule Test Room',
         description: 'A room for testing rate rules',
-        base_price: 100.00,
+        base_price: 100.0,
         max_capacity: 2,
         status: 'available',
       },
@@ -114,7 +114,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: testRoom.id,
         start_date: '2024-07-01',
         end_date: '2024-07-31',
-        price_per_night: 25.00, // $25 premium for weekends
+        price_per_night: 25.0, // $25 premium for weekends
         min_stay_nights: 2,
         day_of_week: [5, 6], // Friday and Saturday (weekend premium)
         source: 'website',
@@ -131,7 +131,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: testRoom.id,
         start_date: '2024-07-01',
         end_date: '2024-07-31',
-        price_per_night: 25.00,
+        price_per_night: 25.0,
         day_of_week: [5, 6],
         source: 'website',
       });
@@ -149,14 +149,14 @@ describe('Rate Rules Workflow (e2e)', () => {
         .expect(200);
 
       expect(searchResponse.body.available_rooms).toHaveLength(1);
-      
+
       const room = searchResponse.body.available_rooms[0];
-      
+
       // Verify pricing calculation:
       // Friday night: base_price (100) + weekend_premium (25) = 125
       // Saturday night: base_price (100) + weekend_premium (25) = 125
       // Total: 125 + 125 = 250
-      expect(room.total_cost).toBe(250.00);
+      expect(room.total_cost).toBe(250.0);
       expect(room.nights).toBe(2);
     });
 
@@ -166,7 +166,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: testRoom.id,
         start_date: '2024-07-01',
         end_date: '2024-07-31',
-        price_per_night: 15.00, // $15 summer premium
+        price_per_night: 15.0, // $15 summer premium
         day_of_week: [0, 1, 2, 3, 4, 5, 6], // All days
         source: 'website',
       };
@@ -182,7 +182,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: testRoom.id,
         start_date: '2024-07-01',
         end_date: '2024-07-31',
-        price_per_night: 30.00, // $30 weekend premium (higher than summer)
+        price_per_night: 30.0, // $30 weekend premium (higher than summer)
         day_of_week: [5, 6], // Friday and Saturday only
         source: 'website',
       };
@@ -206,13 +206,13 @@ describe('Rate Rules Workflow (e2e)', () => {
         .expect(200);
 
       const room = searchResponse.body.available_rooms[0];
-      
+
       // Verify pricing calculation:
       // Thursday night: base_price (100) + summer_premium (15) = 115
       // Friday night: base_price (100) + weekend_premium (30) = 130 (day-specific rule takes priority)
       // Saturday night: base_price (100) + weekend_premium (30) = 130
       // Total: 115 + 130 + 130 = 375
-      expect(room.total_cost).toBe(375.00);
+      expect(room.total_cost).toBe(375.0);
       expect(room.nights).toBe(3);
     });
 
@@ -229,7 +229,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         data: {
           hotel_id: otherHotel.id,
           name: 'Other Room',
-          base_price: 80.00,
+          base_price: 80.0,
           max_capacity: 2,
           status: 'available',
         },
@@ -240,7 +240,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: testRoom.id,
         start_date: '2024-08-01',
         end_date: '2024-08-31',
-        price_per_night: 20.00,
+        price_per_night: 20.0,
         day_of_week: [0, 1, 2, 3, 4, 5, 6],
         source: 'website',
       };
@@ -249,7 +249,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: otherRoom.id,
         start_date: '2024-08-01',
         end_date: '2024-08-31',
-        price_per_night: 30.00,
+        price_per_night: 30.0,
         day_of_week: [0, 1, 2, 3, 4, 5, 6],
         source: 'website',
       };
@@ -300,7 +300,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: testRoom.id,
         start_date: '2024-09-01',
         end_date: '2024-09-30',
-        price_per_night: 10.00, // $10 premium for website
+        price_per_night: 10.0, // $10 premium for website
         day_of_week: [0, 1, 2, 3, 4, 5, 6],
         source: 'website',
       };
@@ -309,7 +309,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: testRoom.id,
         start_date: '2024-09-01',
         end_date: '2024-09-30',
-        price_per_night: 20.00, // $20 premium for Airbnb
+        price_per_night: 20.0, // $20 premium for Airbnb
         day_of_week: [0, 1, 2, 3, 4, 5, 6],
         source: 'airbnb',
       };
@@ -340,7 +340,7 @@ describe('Rate Rules Workflow (e2e)', () => {
 
       const websiteRoom = websiteSearchResponse.body.available_rooms[0];
       // base_price (100) + website_premium (10) = 110 for 1 night
-      expect(websiteRoom.total_cost).toBe(110.00);
+      expect(websiteRoom.total_cost).toBe(110.0);
 
       // Step 3: Search with airbnb platform
       const airbnbSearchResponse = await request(app.getHttpServer())
@@ -356,7 +356,7 @@ describe('Rate Rules Workflow (e2e)', () => {
 
       const airbnbRoom = airbnbSearchResponse.body.available_rooms[0];
       // base_price (100) + airbnb_premium (20) = 120 for 1 night
-      expect(airbnbRoom.total_cost).toBe(120.00);
+      expect(airbnbRoom.total_cost).toBe(120.0);
 
       // Step 4: Filter rate rules by source
       const sourceFilterResponse = await request(app.getHttpServer())
@@ -367,7 +367,9 @@ describe('Rate Rules Workflow (e2e)', () => {
 
       expect(sourceFilterResponse.body.total).toBe(1);
       expect(sourceFilterResponse.body.rate_rules[0].source).toBe('airbnb');
-      expect(sourceFilterResponse.body.rate_rules[0].price_per_night).toBe(20.00);
+      expect(sourceFilterResponse.body.rate_rules[0].price_per_night).toBe(
+        20.0,
+      );
     });
 
     it('should update rate rule and immediately reflect in room search', async () => {
@@ -376,7 +378,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: testRoom.id,
         start_date: '2024-10-01',
         end_date: '2024-10-31',
-        price_per_night: 15.00,
+        price_per_night: 15.0,
         day_of_week: [0, 1, 2, 3, 4, 5, 6],
         source: 'website',
       };
@@ -402,11 +404,11 @@ describe('Rate Rules Workflow (e2e)', () => {
         .expect(200);
 
       const initialRoom = initialSearchResponse.body.available_rooms[0];
-      expect(initialRoom.total_cost).toBe(115.00); // 100 + 15
+      expect(initialRoom.total_cost).toBe(115.0); // 100 + 15
 
       // Step 3: Update rate rule
       const updateData = {
-        price_per_night: 25.00, // Increase premium
+        price_per_night: 25.0, // Increase premium
       };
 
       await request(app.getHttpServer())
@@ -428,7 +430,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         .expect(200);
 
       const updatedRoom = updatedSearchResponse.body.available_rooms[0];
-      expect(updatedRoom.total_cost).toBe(125.00); // 100 + 25 (updated premium)
+      expect(updatedRoom.total_cost).toBe(125.0); // 100 + 25 (updated premium)
     });
 
     it('should delete rate rule and revert to base pricing', async () => {
@@ -437,7 +439,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: testRoom.id,
         start_date: '2024-11-01',
         end_date: '2024-11-30',
-        price_per_night: 20.00,
+        price_per_night: 20.0,
         day_of_week: [0, 1, 2, 3, 4, 5, 6],
         source: 'website',
       };
@@ -463,7 +465,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         .expect(200);
 
       const premiumRoom = premiumSearchResponse.body.available_rooms[0];
-      expect(premiumRoom.total_cost).toBe(120.00); // 100 + 20
+      expect(premiumRoom.total_cost).toBe(120.0); // 100 + 20
 
       // Step 3: Delete rate rule
       await request(app.getHttpServer())
@@ -484,7 +486,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         .expect(200);
 
       const baseRoom = baseSearchResponse.body.available_rooms[0];
-      expect(baseRoom.total_cost).toBe(100.00); // Base price only
+      expect(baseRoom.total_cost).toBe(100.0); // Base price only
     });
   });
 
@@ -495,7 +497,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: testRoom.id,
         start_date: '2024-12-01',
         end_date: '2024-12-31',
-        price_per_night: 15.00,
+        price_per_night: 15.0,
         day_of_week: [1, 2, 3], // Monday, Tuesday, Wednesday
         source: 'website',
       };
@@ -511,7 +513,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: testRoom.id,
         start_date: '2024-12-15',
         end_date: '2024-12-31',
-        price_per_night: 25.00,
+        price_per_night: 25.0,
         day_of_week: [2, 3, 4], // Overlaps on Tuesday, Wednesday
         source: 'website',
       };
@@ -530,7 +532,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         .expect(200);
 
       expect(rateRulesResponse.body.total).toBe(1);
-      expect(rateRulesResponse.body.rate_rules[0].price_per_night).toBe(15.00);
+      expect(rateRulesResponse.body.rate_rules[0].price_per_night).toBe(15.0);
     });
 
     it('should handle minimum stay requirements with rate rules', async () => {
@@ -539,7 +541,7 @@ describe('Rate Rules Workflow (e2e)', () => {
         room_id: testRoom.id,
         start_date: '2025-01-01',
         end_date: '2025-01-31',
-        price_per_night: 30.00,
+        price_per_night: 30.0,
         min_stay_nights: 3, // Minimum 3 nights
         day_of_week: [0, 1, 2, 3, 4, 5, 6],
         source: 'website',
@@ -579,7 +581,7 @@ describe('Rate Rules Workflow (e2e)', () => {
 
       expect(longStayResponse.body.available_rooms).toHaveLength(1);
       const room = longStayResponse.body.available_rooms[0];
-      expect(room.total_cost).toBe(390.00); // (100 + 30) * 3 nights
+      expect(room.total_cost).toBe(390.0); // (100 + 30) * 3 nights
     });
   });
 });

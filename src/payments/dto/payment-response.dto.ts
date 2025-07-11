@@ -9,7 +9,8 @@ export class CheckoutSessionResponseDto {
 
   @ApiProperty({
     description: 'Stripe Checkout Session URL',
-    example: 'https://checkout.stripe.com/pay/cs_test_a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6',
+    example:
+      'https://checkout.stripe.com/pay/cs_test_a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6',
   })
   checkout_url: string;
 

@@ -109,10 +109,14 @@ export class StatsService {
       },
     });
 
-    const totalRevenue = parseFloat((revenueData._sum.total_cost || 0).toString()); // Convert Decimal to number
+    const totalRevenue = parseFloat(
+      (revenueData._sum.total_cost || 0).toString(),
+    ); // Convert Decimal to number
     const bookingCount = revenueData._count.id;
     const averageBookingValue =
-      bookingCount > 0 ? parseFloat((totalRevenue / bookingCount).toFixed(2)) : 0;
+      bookingCount > 0
+        ? parseFloat((totalRevenue / bookingCount).toFixed(2))
+        : 0;
 
     return {
       month: `${year}-${month.toString().padStart(2, '0')}`,
@@ -190,7 +194,9 @@ export class StatsService {
       occupiedRoomNights += Math.max(0, nights);
     });
 
-    const totalRevenue = parseFloat((revenueData._sum.total_cost || 0).toString()); // Convert Decimal to number
+    const totalRevenue = parseFloat(
+      (revenueData._sum.total_cost || 0).toString(),
+    ); // Convert Decimal to number
     const adrEuros =
       occupiedRoomNights > 0
         ? parseFloat((totalRevenue / occupiedRoomNights).toFixed(2))

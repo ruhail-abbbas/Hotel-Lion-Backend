@@ -12,7 +12,8 @@ export class RateRuleQueryDto {
   room_id?: string;
 
   @ApiProperty({
-    description: 'Filter by hotel ID (returns rate rules for all rooms in the hotel)',
+    description:
+      'Filter by hotel ID (returns rate rules for all rooms in the hotel)',
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: false,
   })

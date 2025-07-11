@@ -8,7 +8,10 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRateRuleDto } from './dto/create-rate-rule.dto';
 import { UpdateRateRuleDto } from './dto/update-rate-rule.dto';
-import { RateRuleResponseDto, RateRuleListResponseDto } from './dto/rate-rule-response.dto';
+import {
+  RateRuleResponseDto,
+  RateRuleListResponseDto,
+} from './dto/rate-rule-response.dto';
 import { RateRuleQueryDto } from './dto/rate-rule-query.dto';
 
 @Injectable()
@@ -17,18 +20,25 @@ export class RateRulesService {
 
   constructor(private prisma: PrismaService) {}
 
-  async create(createRateRuleDto: CreateRateRuleDto): Promise<RateRuleResponseDto> {
+  async create(
+    createRateRuleDto: CreateRateRuleDto,
+  ): Promise<RateRuleResponseDto> {
     // Validate that room exists
     const room = await this.prisma.room.findUnique({
       where: { id: createRateRuleDto.room_id },
     });
 
     if (!room) {
-      throw new NotFoundException(`Room with ID ${createRateRuleDto.room_id} not found`);
+      throw new NotFoundException(
+        `Room with ID ${createRateRuleDto.room_id} not found`,
+      );
     }
 
     // Validate date range
-    this.validateDateRange(createRateRuleDto.start_date, createRateRuleDto.end_date);
+    this.validateDateRange(
+      createRateRuleDto.start_date,
+      createRateRuleDto.end_date,
+    );
 
     // Check for overlapping rate rules
     await this.checkForOverlappingRules(
@@ -52,7 +62,9 @@ export class RateRulesService {
         },
       });
 
-      this.logger.log(`Created rate rule ${rateRule.id} for room ${createRateRuleDto.room_id}`);
+      this.logger.log(
+        `Created rate rule ${rateRule.id} for room ${createRateRuleDto.room_id}`,
+      );
 
       return this.formatRateRuleResponse(rateRule);
     } catch (error) {
@@ -62,7 +74,7 @@ export class RateRulesService {
   }
 
   async findAll(query: RateRuleQueryDto): Promise<RateRuleListResponseDto> {
-    const where: any = {};
+    const where: Record<string, any> = {};
 
     // Direct room filtering
     if (query.room_id) {
@@ -93,16 +105,12 @@ export class RateRulesService {
             },
           },
         },
-        orderBy: [
-          { room_id: 'asc' },
-          { start_date: 'asc' },
-          { source: 'asc' },
-        ],
+        orderBy: [{ room_id: 'asc' }, { start_date: 'asc' }, { source: 'asc' }],
       });
 
       return {
         total: rateRules.length,
-        rate_rules: rateRules.map(rule => this.formatRateRuleResponse(rule)),
+        rate_rules: rateRules.map((rule) => this.formatRateRuleResponse(rule)),
       };
     } catch (error) {
       this.logger.error('Failed to fetch rate rules:', error);
@@ -122,7 +130,10 @@ export class RateRulesService {
     return this.formatRateRuleResponse(rateRule);
   }
 
-  async update(id: string, updateRateRuleDto: UpdateRateRuleDto): Promise<RateRuleResponseDto> {
+  async update(
+    id: string,
+    updateRateRuleDto: UpdateRateRuleDto,
+  ): Promise<RateRuleResponseDto> {
     // Check if rate rule exists
     const existingRateRule = await this.prisma.rateRule.findUnique({
       where: { id },
@@ -133,26 +144,37 @@ export class RateRulesService {
     }
 
     // Validate date range if both dates are provided
-    const startDate = updateRateRuleDto.start_date || existingRateRule.start_date.toISOString().split('T')[0];
-    const endDate = updateRateRuleDto.end_date || existingRateRule.end_date.toISOString().split('T')[0];
-    
+    const startDate =
+      updateRateRuleDto.start_date ||
+      existingRateRule.start_date.toISOString().split('T')[0];
+    const endDate =
+      updateRateRuleDto.end_date ||
+      existingRateRule.end_date.toISOString().split('T')[0];
+
     this.validateDateRange(startDate, endDate);
 
     // Check for overlapping rules if relevant fields are being updated
-    if (updateRateRuleDto.start_date || updateRateRuleDto.end_date || updateRateRuleDto.day_of_week || updateRateRuleDto.source) {
+    if (
+      updateRateRuleDto.start_date ||
+      updateRateRuleDto.end_date ||
+      updateRateRuleDto.day_of_week ||
+      updateRateRuleDto.source
+    ) {
       await this.checkForOverlappingRules(
         existingRateRule.room_id,
         startDate,
         endDate,
         updateRateRuleDto.day_of_week || existingRateRule.day_of_week,
-        updateRateRuleDto.source !== undefined ? updateRateRuleDto.source : existingRateRule.source || undefined,
+        updateRateRuleDto.source !== undefined
+          ? updateRateRuleDto.source
+          : existingRateRule.source || undefined,
         id, // Exclude current rule from overlap check
       );
     }
 
     try {
-      const updateData: any = {};
-      
+      const updateData: Record<string, any> = {};
+
       if (updateRateRuleDto.start_date) {
         updateData.start_date = new Date(updateRateRuleDto.start_date);
       }
@@ -222,17 +244,29 @@ export class RateRulesService {
 
     // Check that dates are not too far in the past
     const now = new Date();
-    const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+    const oneYearAgo = new Date(
+      now.getFullYear() - 1,
+      now.getMonth(),
+      now.getDate(),
+    );
 
     if (end < oneYearAgo) {
-      throw new BadRequestException('end_date cannot be more than one year in the past');
+      throw new BadRequestException(
+        'end_date cannot be more than one year in the past',
+      );
     }
 
     // Check that dates are not too far in the future
-    const fiveYearsFromNow = new Date(now.getFullYear() + 5, now.getMonth(), now.getDate());
+    const fiveYearsFromNow = new Date(
+      now.getFullYear() + 5,
+      now.getMonth(),
+      now.getDate(),
+    );
 
     if (start > fiveYearsFromNow) {
-      throw new BadRequestException('start_date cannot be more than five years in the future');
+      throw new BadRequestException(
+        'start_date cannot be more than five years in the future',
+      );
     }
   }
 
@@ -244,7 +278,7 @@ export class RateRulesService {
     source?: string,
     excludeRuleId?: string,
   ): Promise<void> {
-    const where: any = {
+    const where: Record<string, any> = {
       room_id: roomId,
       AND: [
         {
@@ -274,26 +308,40 @@ export class RateRulesService {
 
     // Check for day-of-week overlaps
     for (const rule of overlappingRules) {
-      const hasOverlappingDays = rule.day_of_week.some(day => dayOfWeek.includes(day));
-      
+      const hasOverlappingDays = rule.day_of_week.some((day) =>
+        dayOfWeek.includes(day),
+      );
+
       if (hasOverlappingDays) {
         throw new ConflictException(
-          `Rate rule conflicts with existing rule ${rule.id}. Overlapping date range and days of the week.`
+          `Rate rule conflicts with existing rule ${rule.id}. Overlapping date range and days of the week.`,
         );
       }
     }
   }
 
-  private formatRateRuleResponse(rateRule: any): RateRuleResponseDto {
+  private formatRateRuleResponse(rateRule: {
+    id: string;
+    room_id: string;
+    start_date: Date;
+    end_date: Date;
+    price_per_night: number | { toString(): string };
+    min_stay_nights: number | null;
+    day_of_week: number[];
+    source: string | null;
+  }): RateRuleResponseDto {
     return {
       id: rateRule.id,
       room_id: rateRule.room_id,
       start_date: rateRule.start_date.toISOString().split('T')[0],
       end_date: rateRule.end_date.toISOString().split('T')[0],
-      price_per_night: parseFloat(rateRule.price_per_night.toString()),
-      min_stay_nights: rateRule.min_stay_nights,
+      price_per_night:
+        typeof rateRule.price_per_night === 'number'
+          ? rateRule.price_per_night
+          : parseFloat(rateRule.price_per_night.toString()),
+      min_stay_nights: rateRule.min_stay_nights || 1,
       day_of_week: rateRule.day_of_week,
-      source: rateRule.source,
+      source: rateRule.source || 'Website',
     };
   }
 }

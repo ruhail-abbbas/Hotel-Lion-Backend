@@ -23,7 +23,10 @@ import {
 import { RateRulesService } from './rate-rules.service';
 import { CreateRateRuleDto } from './dto/create-rate-rule.dto';
 import { UpdateRateRuleDto } from './dto/update-rate-rule.dto';
-import { RateRuleResponseDto, RateRuleListResponseDto } from './dto/rate-rule-response.dto';
+import {
+  RateRuleResponseDto,
+  RateRuleListResponseDto,
+} from './dto/rate-rule-response.dto';
 import { RateRuleQueryDto } from './dto/rate-rule-query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -40,7 +43,8 @@ export class RateRulesController {
   @Post()
   @ApiOperation({
     summary: 'Create a new rate rule (Admin only)',
-    description: 'Create a new rate rule with premium pricing for specific rooms, dates, and days of the week.',
+    description:
+      'Create a new rate rule with premium pricing for specific rooms, dates, and days of the week.',
   })
   @ApiBody({
     type: CreateRateRuleDto,
@@ -71,14 +75,17 @@ export class RateRulesController {
     status: 409,
     description: 'Conflict - Overlapping rate rule exists',
   })
-  async create(@Body() createRateRuleDto: CreateRateRuleDto): Promise<RateRuleResponseDto> {
+  async create(
+    @Body() createRateRuleDto: CreateRateRuleDto,
+  ): Promise<RateRuleResponseDto> {
     return this.rateRulesService.create(createRateRuleDto);
   }
 
   @Get()
   @ApiOperation({
     summary: 'Get all rate rules (Admin only)',
-    description: 'Retrieve all rate rules with optional filtering by room ID, hotel ID, or source platform.',
+    description:
+      'Retrieve all rate rules with optional filtering by room ID, hotel ID, or source platform.',
   })
   @ApiQuery({
     name: 'room_id',
@@ -88,7 +95,8 @@ export class RateRulesController {
   })
   @ApiQuery({
     name: 'hotel_id',
-    description: 'Filter by hotel ID (returns rate rules for all rooms in the hotel)',
+    description:
+      'Filter by hotel ID (returns rate rules for all rooms in the hotel)',
     required: false,
     type: 'string',
   })
@@ -115,7 +123,9 @@ export class RateRulesController {
     status: 403,
     description: 'Forbidden - Admin role required',
   })
-  async findAll(@Query() query: RateRuleQueryDto): Promise<RateRuleListResponseDto> {
+  async findAll(
+    @Query() query: RateRuleQueryDto,
+  ): Promise<RateRuleListResponseDto> {
     return this.rateRulesService.findAll(query);
   }
 
@@ -153,7 +163,8 @@ export class RateRulesController {
   @Put(':id')
   @ApiOperation({
     summary: 'Update a rate rule (Admin only)',
-    description: 'Update an existing rate rule with new pricing or date information.',
+    description:
+      'Update an existing rate rule with new pricing or date information.',
   })
   @ApiParam({
     name: 'id',
@@ -215,7 +226,8 @@ export class RateRulesController {
       properties: {
         message: {
           type: 'string',
-          example: 'Rate rule 123e4567-e89b-12d3-a456-426614174000 has been successfully deleted',
+          example:
+            'Rate rule 123e4567-e89b-12d3-a456-426614174000 has been successfully deleted',
         },
       },
     },

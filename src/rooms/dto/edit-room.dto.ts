@@ -69,7 +69,7 @@ export class EditRoomDto {
 
   @ApiProperty({
     description: 'Base price per night in Euros (for website/direct bookings)',
-    example: 120.00,
+    example: 120.0,
     required: false,
     minimum: 1,
     maximum: 100000,
@@ -86,7 +86,7 @@ export class EditRoomDto {
   @ApiProperty({
     description:
       'Airbnb price per night in Euros (optional - defaults to base_price if not set)',
-    example: 130.00,
+    example: 130.0,
     required: false,
     minimum: 1,
     maximum: 100000,
@@ -103,7 +103,7 @@ export class EditRoomDto {
   @ApiProperty({
     description:
       'Booking.com price per night in Euros (optional - defaults to base_price if not set)',
-    example: 140.00,
+    example: 140.0,
     required: false,
     minimum: 1,
     maximum: 100000,
@@ -165,7 +165,7 @@ export class EditRoomDto {
 
   @ApiProperty({
     description: 'Pet fee in Euros',
-    example: 25.00,
+    example: 25.0,
     required: false,
     minimum: 0,
     maximum: 10000,
@@ -193,7 +193,7 @@ export class EditRoomDto {
 
   @ApiProperty({
     description: 'Cleaning fee in Euros',
-    example: 50.00,
+    example: 50.0,
     required: false,
     minimum: 0,
     maximum: 10000,
@@ -240,20 +240,20 @@ export class EditRoomResponseDto {
 
   @ApiProperty({
     description: 'Base price per night in Euros (for website/direct bookings)',
-    example: 120.00,
+    example: 120.0,
   })
   base_price: number;
 
   @ApiProperty({
     description: 'Airbnb price per night in Euros',
-    example: 130.00,
+    example: 130.0,
     nullable: true,
   })
   airbnb_price?: number;
 
   @ApiProperty({
     description: 'Booking.com price per night in Euros',
-    example: 140.00,
+    example: 140.0,
     nullable: true,
   })
   booking_com_price?: number;
@@ -285,7 +285,7 @@ export class EditRoomResponseDto {
 
   @ApiProperty({
     description: 'Pet fee in Euros',
-    example: 25.00,
+    example: 25.0,
     nullable: true,
   })
   pet_fee?: number;
@@ -299,7 +299,7 @@ export class EditRoomResponseDto {
 
   @ApiProperty({
     description: 'Cleaning fee in Euros',
-    example: 50.00,
+    example: 50.0,
     nullable: true,
   })
   cleaning_fee?: number;

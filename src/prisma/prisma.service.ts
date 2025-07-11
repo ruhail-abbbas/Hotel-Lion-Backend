@@ -2,10 +2,13 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { PrismaClient, Prisma } from '@prisma/client';
 
 @Injectable()
-export class PrismaService extends PrismaClient<
-  Prisma.PrismaClientOptions,
-  'query' | 'info' | 'warn' | 'error'
-> implements OnModuleInit {
+export class PrismaService
+  extends PrismaClient<
+    Prisma.PrismaClientOptions,
+    'query' | 'info' | 'warn' | 'error'
+  >
+  implements OnModuleInit
+{
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
@@ -33,41 +36,32 @@ export class PrismaService extends PrismaClient<
     // Query logging with performance monitoring
     this.$on('query', (e: Prisma.QueryEvent) => {
       const duration = Date.now() - new Date(e.timestamp).getTime();
-      
+
       if (duration > 1000) {
         // Log slow queries (> 1 second)
-        this.logger.warn(
-          `Slow Query (${duration}ms): ${e.query}`,
-          {
-            duration,
-            params: e.params,
-            target: e.target,
-          }
-        );
+        this.logger.warn(`Slow Query (${duration}ms): ${e.query}`, {
+          duration,
+          params: e.params,
+          target: e.target,
+        });
       } else if (duration > 100) {
         // Log medium-slow queries (> 100ms) in development
         if (process.env.NODE_ENV === 'development') {
-          this.logger.log(
-            `Query (${duration}ms): ${e.query}`,
-            {
-              duration,
-              params: e.params,
-              target: e.target,
-            }
-          );
+          this.logger.log(`Query (${duration}ms): ${e.query}`, {
+            duration,
+            params: e.params,
+            target: e.target,
+          });
         }
       }
 
       // Log all queries in debug mode
       if (process.env.LOG_LEVEL === 'debug') {
-        this.logger.debug(
-          `Query (${duration}ms): ${e.query}`,
-          {
-            duration,
-            params: e.params,
-            target: e.target,
-          }
-        );
+        this.logger.debug(`Query (${duration}ms): ${e.query}`, {
+          duration,
+          params: e.params,
+          target: e.target,
+        });
       }
     });
 
@@ -108,16 +102,24 @@ export class PrismaService extends PrismaClient<
   async getQueryMetrics() {
     try {
       // Check if $metrics is available (requires Prisma metrics feature)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if ('$metrics' in this && typeof (this as any).$metrics === 'object') {
-        const metrics = await (this as any).$metrics.json();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        const metricsObj = (this as any).$metrics;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        const metrics = await metricsObj.json();
         return {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
           counters: metrics.counters || {},
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
           gauges: metrics.gauges || {},
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
           histograms: metrics.histograms || {},
         };
       } else {
         return {
-          error: 'Prisma metrics not available. Enable metrics in Prisma client configuration.',
+          error:
+            'Prisma metrics not available. Enable metrics in Prisma client configuration.',
           counters: {},
           gauges: {},
           histograms: {},
@@ -125,7 +127,7 @@ export class PrismaService extends PrismaClient<
       }
     } catch (error) {
       return {
-        error: `Failed to get metrics: ${error.message}`,
+        error: `Failed to get metrics: ${(error as Error).message}`,
         counters: {},
         gauges: {},
         histograms: {},
@@ -138,25 +140,25 @@ export class PrismaService extends PrismaClient<
    */
   async timedQuery<T>(
     operation: () => Promise<T>,
-    operationName: string
+    operationName: string,
   ): Promise<{ result: T; duration: number }> {
     const startTime = Date.now();
-    
+
     try {
       const result = await operation();
       const duration = Date.now() - startTime;
-      
+
       if (duration > 500) {
         this.logger.warn(
-          `Slow operation "${operationName}" completed in ${duration}ms`
+          `Slow operation "${operationName}" completed in ${duration}ms`,
         );
       }
-      
+
       return { result, duration };
     } catch (error) {
       const duration = Date.now() - startTime;
       this.logger.error(
-        `Operation "${operationName}" failed after ${duration}ms: ${error.message}`
+        `Operation "${operationName}" failed after ${duration}ms: ${(error as Error).message}`,
       );
       throw error;
     }

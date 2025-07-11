@@ -34,8 +34,9 @@ export class UpdateRateRuleDto {
   end_date?: string;
 
   @ApiProperty({
-    description: 'Premium amount in Euros to add to base price (can be negative for discounts)',
-    example: 25.00,
+    description:
+      'Premium amount in Euros to add to base price (can be negative for discounts)',
+    example: 25.0,
     required: false,
     minimum: -999999,
     maximum: 999999,
@@ -61,7 +62,8 @@ export class UpdateRateRuleDto {
   min_stay_nights?: number;
 
   @ApiProperty({
-    description: 'Array of days of the week this rule applies to (0=Sunday, 1=Monday, ..., 6=Saturday)',
+    description:
+      'Array of days of the week this rule applies to (0=Sunday, 1=Monday, ..., 6=Saturday)',
     example: [5, 6],
     type: [Number],
     required: false,

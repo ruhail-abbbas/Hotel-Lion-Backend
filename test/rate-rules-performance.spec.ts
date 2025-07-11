@@ -8,7 +8,7 @@ describe('Rate Rules Performance', () => {
 
   const mockRoom = {
     id: 'room-id-1',
-    base_price: 100.00,
+    base_price: 100.0,
     airbnb_price: null,
     booking_com_price: null,
     rate_rules: [],
@@ -65,7 +65,7 @@ describe('Rate Rules Performance', () => {
           {
             start_date: new Date('2024-01-01'),
             end_date: new Date('2024-12-31'),
-            price_per_night: 25.00,
+            price_per_night: 25.0,
             day_of_week: [0, 1, 2, 3, 4, 5, 6], // All days
           },
         ],
@@ -90,25 +90,25 @@ describe('Rate Rules Performance', () => {
           {
             start_date: new Date('2024-01-01'),
             end_date: new Date('2024-12-31'),
-            price_per_night: 15.00,
+            price_per_night: 15.0,
             day_of_week: [0, 1, 2, 3, 4, 5, 6], // General rule
           },
           {
             start_date: new Date('2024-01-01'),
             end_date: new Date('2024-12-31'),
-            price_per_night: 30.00,
+            price_per_night: 30.0,
             day_of_week: [5, 6], // Weekend premium
           },
           {
             start_date: new Date('2024-07-01'),
             end_date: new Date('2024-08-31'),
-            price_per_night: 40.00,
+            price_per_night: 40.0,
             day_of_week: [5, 6], // Summer weekend premium
           },
           {
             start_date: new Date('2024-12-20'),
             end_date: new Date('2024-12-31'),
-            price_per_night: 50.00,
+            price_per_night: 50.0,
             day_of_week: [0, 1, 2, 3, 4, 5, 6], // Holiday premium
           },
         ],
@@ -133,7 +133,7 @@ describe('Rate Rules Performance', () => {
           {
             start_date: new Date('2024-01-01'),
             end_date: new Date('2024-12-31'),
-            price_per_night: 25.00,
+            price_per_night: 25.0,
             day_of_week: [5, 6], // Weekend premium
           },
         ],
@@ -159,7 +159,7 @@ describe('Rate Rules Performance', () => {
         manyRules.push({
           start_date: new Date(`2024-${month.toString().padStart(2, '0')}-01`),
           end_date: new Date(`2024-${month.toString().padStart(2, '0')}-28`),
-          price_per_night: 10.00 + month,
+          price_per_night: 10.0 + month,
           day_of_week: [0, 1, 2, 3, 4, 5, 6],
         });
 
@@ -167,16 +167,18 @@ describe('Rate Rules Performance', () => {
         manyRules.push({
           start_date: new Date(`2024-${month.toString().padStart(2, '0')}-01`),
           end_date: new Date(`2024-${month.toString().padStart(2, '0')}-28`),
-          price_per_night: 20.00 + month,
+          price_per_night: 20.0 + month,
           day_of_week: [5, 6],
         });
 
         // Special weekday rule for some months
         if (month % 3 === 0) {
           manyRules.push({
-            start_date: new Date(`2024-${month.toString().padStart(2, '0')}-01`),
+            start_date: new Date(
+              `2024-${month.toString().padStart(2, '0')}-01`,
+            ),
             end_date: new Date(`2024-${month.toString().padStart(2, '0')}-28`),
-            price_per_night: 5.00 + month,
+            price_per_night: 5.0 + month,
             day_of_week: [1, 2, 3, 4],
           });
         }
@@ -206,13 +208,13 @@ describe('Rate Rules Performance', () => {
           {
             start_date: new Date('2024-01-01'),
             end_date: new Date('2024-12-31'),
-            price_per_night: 15.00,
+            price_per_night: 15.0,
             day_of_week: [0, 1, 2, 3, 4, 5, 6], // General rule
           },
           {
             start_date: new Date('2024-01-01'),
             end_date: new Date('2024-12-31'),
-            price_per_night: 25.00,
+            price_per_night: 25.0,
             day_of_week: [5, 6], // Weekend premium (overrides general)
           },
         ],
@@ -221,7 +223,11 @@ describe('Rate Rules Performance', () => {
       const checkIn = new Date('2024-07-04'); // Thursday
       const checkOut = new Date('2024-07-08'); // Monday (4 nights: Thu, Fri, Sat, Sun)
 
-      const result = service.calculateRoomPricing(roomWithRules, checkIn, checkOut);
+      const result = service.calculateRoomPricing(
+        roomWithRules,
+        checkIn,
+        checkOut,
+      );
 
       // Expected calculation:
       // Thursday: base (100) + general premium (15) = 115
@@ -230,8 +236,8 @@ describe('Rate Rules Performance', () => {
       // Sunday: base (100) + weekend premium (25) = 125
       // Total: 115 + 125 + 125 + 125 = 490
 
-      expect(result.totalCost).toBe(490.00);
-      expect(result.basePrice).toBe(115.00); // Lowest rate
+      expect(result.totalCost).toBe(490.0);
+      expect(result.basePrice).toBe(115.0); // Lowest rate
     });
 
     it('should handle edge cases efficiently', () => {
@@ -241,7 +247,7 @@ describe('Rate Rules Performance', () => {
           {
             start_date: new Date('2024-01-01'),
             end_date: new Date('2024-01-01'), // Single day rule
-            price_per_night: 50.00,
+            price_per_night: 50.0,
             day_of_week: [1], // Monday only
           },
         ],
@@ -262,12 +268,14 @@ describe('Rate Rules Performance', () => {
     it('should benchmark memory usage', () => {
       const roomWithRules = {
         ...mockRoom,
-        rate_rules: Array(50).fill(null).map((_, i) => ({
-          start_date: new Date('2024-01-01'),
-          end_date: new Date('2024-12-31'),
-          price_per_night: 10.00 + i,
-          day_of_week: [i % 7], // Different days
-        })),
+        rate_rules: Array(50)
+          .fill(null)
+          .map((_, i) => ({
+            start_date: new Date('2024-01-01'),
+            end_date: new Date('2024-12-31'),
+            price_per_night: 10.0 + i,
+            day_of_week: [i % 7], // Different days
+          })),
       };
 
       const checkIn = new Date('2024-01-01');
@@ -283,7 +291,9 @@ describe('Rate Rules Performance', () => {
       }
 
       // Memory usage should be minimal and consistent
-      const avgMemoryIncrease = measurements.reduce((a, b) => a + b, 0) / measurements.length;
+      const avgMemoryIncrease =
+        measurements.reduce((a: number, b: number) => a + b, 0) /
+        measurements.length;
       expect(avgMemoryIncrease).toBeLessThan(1024 * 10); // Less than 10KB average increase
     });
   });
@@ -291,9 +301,9 @@ describe('Rate Rules Performance', () => {
   describe('Platform Price Calculation Performance', () => {
     it('should handle platform price calculations efficiently', () => {
       const roomPricing = {
-        base_price: 100.00,
-        airbnb_price: 120.00,
-        booking_com_price: 130.00,
+        base_price: 100.0,
+        airbnb_price: 120.0,
+        booking_com_price: 130.0,
       };
 
       const start = performance.now();

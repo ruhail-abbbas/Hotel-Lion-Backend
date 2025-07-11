@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { RateRulesService } from './rate-rules.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRateRuleDto } from './dto/create-rate-rule.dto';
@@ -8,7 +12,7 @@ import { RateRuleQueryDto } from './dto/rate-rule-query.dto';
 
 describe('RateRulesService', () => {
   let service: RateRulesService;
-  let prismaService: PrismaService;
+  // let prismaService: PrismaService; // Currently unused in tests
 
   const mockRoom = {
     id: 'room-id-1',
@@ -21,7 +25,7 @@ describe('RateRulesService', () => {
     room_id: 'room-id-1',
     start_date: new Date('2024-01-01'),
     end_date: new Date('2024-01-07'),
-    price_per_night: 50.00,
+    price_per_night: 50.0,
     min_stay_nights: 2,
     day_of_week: [0, 1, 2, 3, 4, 5, 6], // All days
     source: 'website',
@@ -68,7 +72,7 @@ describe('RateRulesService', () => {
       room_id: 'room-id-1',
       start_date: '2024-01-01',
       end_date: '2024-01-07',
-      price_per_night: 50.00,
+      price_per_night: 50.0,
       min_stay_nights: 2,
       day_of_week: [0, 1, 2, 3, 4, 5, 6],
       source: 'website',
@@ -86,7 +90,7 @@ describe('RateRulesService', () => {
         room_id: mockRateRule.room_id,
         start_date: '2024-01-01',
         end_date: '2024-01-07',
-        price_per_night: 50.00,
+        price_per_night: 50.0,
         min_stay_nights: 2,
         day_of_week: [0, 1, 2, 3, 4, 5, 6],
         source: 'website',
@@ -117,7 +121,9 @@ describe('RateRulesService', () => {
 
       mockPrismaService.room.findUnique.mockResolvedValue(mockRoom);
 
-      await expect(service.create(invalidDto)).rejects.toThrow(BadRequestException);
+      await expect(service.create(invalidDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw ConflictException for overlapping rate rules', async () => {
@@ -132,7 +138,9 @@ describe('RateRulesService', () => {
       mockPrismaService.room.findUnique.mockResolvedValue(mockRoom);
       mockPrismaService.rateRule.findMany.mockResolvedValue([overlappingRule]);
 
-      await expect(service.create(createRateRuleDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(createRateRuleDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should allow non-overlapping rules on different days', async () => {
@@ -178,7 +186,7 @@ describe('RateRulesService', () => {
             room_id: mockRateRule.room_id,
             start_date: '2024-01-01',
             end_date: '2024-01-07',
-            price_per_night: 50.00,
+            price_per_night: 50.0,
             min_stay_nights: 2,
             day_of_week: [0, 1, 2, 3, 4, 5, 6],
             source: 'website',
@@ -204,11 +212,7 @@ describe('RateRulesService', () => {
             },
           },
         },
-        orderBy: [
-          { room_id: 'asc' },
-          { start_date: 'asc' },
-          { source: 'asc' },
-        ],
+        orderBy: [{ room_id: 'asc' }, { start_date: 'asc' }, { source: 'asc' }],
       });
     });
 
@@ -233,11 +237,7 @@ describe('RateRulesService', () => {
             },
           },
         },
-        orderBy: [
-          { room_id: 'asc' },
-          { start_date: 'asc' },
-          { source: 'asc' },
-        ],
+        orderBy: [{ room_id: 'asc' }, { start_date: 'asc' }, { source: 'asc' }],
       });
     });
 
@@ -258,11 +258,7 @@ describe('RateRulesService', () => {
             },
           },
         },
-        orderBy: [
-          { room_id: 'asc' },
-          { start_date: 'asc' },
-          { source: 'asc' },
-        ],
+        orderBy: [{ room_id: 'asc' }, { start_date: 'asc' }, { source: 'asc' }],
       });
     });
 
@@ -289,11 +285,7 @@ describe('RateRulesService', () => {
             },
           },
         },
-        orderBy: [
-          { room_id: 'asc' },
-          { start_date: 'asc' },
-          { source: 'asc' },
-        ],
+        orderBy: [{ room_id: 'asc' }, { start_date: 'asc' }, { source: 'asc' }],
       });
     });
   });
@@ -309,7 +301,7 @@ describe('RateRulesService', () => {
         room_id: mockRateRule.room_id,
         start_date: '2024-01-01',
         end_date: '2024-01-07',
-        price_per_night: 50.00,
+        price_per_night: 50.0,
         min_stay_nights: 2,
         day_of_week: [0, 1, 2, 3, 4, 5, 6],
         source: 'website',
@@ -327,20 +319,20 @@ describe('RateRulesService', () => {
 
   describe('update', () => {
     const updateRateRuleDto: UpdateRateRuleDto = {
-      price_per_night: 75.00,
+      price_per_night: 75.0,
       min_stay_nights: 3,
     };
 
     it('should update a rate rule successfully', async () => {
       const updatedRateRule = { ...mockRateRule, ...updateRateRuleDto };
-      
+
       mockPrismaService.rateRule.findUnique.mockResolvedValue(mockRateRule);
       mockPrismaService.rateRule.findMany.mockResolvedValue([]); // No overlapping rules
       mockPrismaService.rateRule.update.mockResolvedValue(updatedRateRule);
 
       const result = await service.update('rate-rule-id-1', updateRateRuleDto);
 
-      expect(result.price_per_night).toBe(75.00);
+      expect(result.price_per_night).toBe(75.0);
       expect(result.min_stay_nights).toBe(3);
     });
 
@@ -400,7 +392,7 @@ describe('RateRulesService', () => {
         room_id: 'room-id-1',
         start_date: '2024-01-01',
         end_date: '2029-01-01', // 5 years - at the boundary
-        price_per_night: 50.00,
+        price_per_night: 50.0,
         day_of_week: [0, 1, 2, 3, 4, 5, 6],
       };
 
@@ -417,13 +409,15 @@ describe('RateRulesService', () => {
         room_id: 'room-id-1',
         start_date: '2030-01-01', // Too far in the future
         end_date: '2030-01-07',
-        price_per_night: 50.00,
+        price_per_night: 50.0,
         day_of_week: [0, 1, 2, 3, 4, 5, 6],
       };
 
       mockPrismaService.room.findUnique.mockResolvedValue(mockRoom);
 
-      await expect(service.create(futureDto)).rejects.toThrow(BadRequestException);
+      await expect(service.create(futureDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should handle partial day overlap scenarios', async () => {
@@ -439,14 +433,16 @@ describe('RateRulesService', () => {
         room_id: 'room-id-1',
         start_date: '2024-01-03',
         end_date: '2024-01-10',
-        price_per_night: 60.00,
+        price_per_night: 60.0,
         day_of_week: [2, 3], // Tuesday, Wednesday - overlaps on Tuesday
       };
 
       mockPrismaService.room.findUnique.mockResolvedValue(mockRoom);
       mockPrismaService.rateRule.findMany.mockResolvedValue([existingRule]);
 
-      await expect(service.create(newRuleDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(newRuleDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should handle empty day_of_week arrays gracefully', async () => {
@@ -454,7 +450,7 @@ describe('RateRulesService', () => {
         room_id: 'room-id-1',
         start_date: '2024-01-01',
         end_date: '2024-01-07',
-        price_per_night: 50.00,
+        price_per_night: 50.0,
         day_of_week: [], // Empty array - should be handled by validation
       };
 

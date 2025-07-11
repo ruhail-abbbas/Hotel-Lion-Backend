@@ -1,5 +1,11 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { PerformanceService, PerformanceStats } from './performance.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -26,10 +32,12 @@ export class MonitoringController {
     status: 200,
     description: 'Performance overview retrieved successfully',
   })
-  async getPerformanceOverview() {
+  getPerformanceOverview() {
     const healthInfo = this.performanceService.getHealthInfo();
     const slowestOperations = this.performanceService.getSlowestOperations(5);
-    const endpointStats = this.performanceService.getEndpointStats().slice(0, 10);
+    const endpointStats = this.performanceService
+      .getEndpointStats()
+      .slice(0, 10);
 
     return {
       health: healthInfo,
@@ -66,9 +74,14 @@ export class MonitoringController {
     @Query('timeWindowMinutes') timeWindowMinutes?: string,
   ): Promise<PerformanceStats[]> {
     const limitNum = limit ? parseInt(limit, 10) : 10;
-    const timeWindowNum = timeWindowMinutes ? parseInt(timeWindowMinutes, 10) : 60;
+    const timeWindowNum = timeWindowMinutes
+      ? parseInt(timeWindowMinutes, 10)
+      : 60;
 
-    return this.performanceService.getSlowestOperations(limitNum, timeWindowNum);
+    return this.performanceService.getSlowestOperations(
+      limitNum,
+      timeWindowNum,
+    );
   }
 
   @Get('performance/endpoints')
@@ -87,8 +100,10 @@ export class MonitoringController {
     status: 200,
     description: 'Endpoint statistics retrieved successfully',
   })
-  async getEndpointStats(@Query('timeWindowMinutes') timeWindowMinutes?: string) {
-    const timeWindowNum = timeWindowMinutes ? parseInt(timeWindowMinutes, 10) : 60;
+  getEndpointStats(@Query('timeWindowMinutes') timeWindowMinutes?: string) {
+    const timeWindowNum = timeWindowMinutes
+      ? parseInt(timeWindowMinutes, 10)
+      : 60;
     return this.performanceService.getEndpointStats(timeWindowNum);
   }
 
@@ -112,7 +127,9 @@ export class MonitoringController {
     @Query('operation') operation: string,
     @Query('timeWindowMinutes') timeWindowMinutes?: string,
   ): Promise<PerformanceStats> {
-    const timeWindowNum = timeWindowMinutes ? parseInt(timeWindowMinutes, 10) : 60;
+    const timeWindowNum = timeWindowMinutes
+      ? parseInt(timeWindowMinutes, 10)
+      : 60;
     return this.performanceService.getOperationStats(operation, timeWindowNum);
   }
 
@@ -136,7 +153,7 @@ export class MonitoringController {
       return {
         success: false,
         error: 'Prisma metrics not available. Enable metrics in Prisma schema.',
-        message: error.message,
+        message: (error as Error).message,
       };
     }
   }
@@ -144,7 +161,8 @@ export class MonitoringController {
   @Get('health')
   @ApiOperation({
     summary: 'Get system health status (Admin only)',
-    description: 'Get overall system health including performance and database status',
+    description:
+      'Get overall system health including performance and database status',
   })
   @ApiResponse({
     status: 200,
@@ -155,13 +173,13 @@ export class MonitoringController {
     const memoryUsage = this.performanceService.getMemoryUsage();
 
     // Test database connection
-    let databaseHealth = { isHealthy: true, error: null };
+    let databaseHealth: { isHealthy: boolean; error: string | null } = { isHealthy: true, error: null };
     try {
       await this.prismaService.$queryRaw`SELECT 1`;
     } catch (error) {
       databaseHealth = {
         isHealthy: false,
-        error: error.message,
+        error: (error as Error).message,
       };
     }
 
@@ -190,20 +208,21 @@ export class MonitoringController {
     status: 200,
     description: 'Cleanup completed successfully',
   })
-  async cleanupMetrics(@Query('olderThanHours') olderThanHours?: string) {
+  cleanupMetrics(@Query('olderThanHours') olderThanHours?: string) {
     const hours = olderThanHours ? parseInt(olderThanHours, 10) : 24;
     const beforeMemory = this.performanceService.getMemoryUsage();
-    
+
     this.performanceService.cleanup(hours);
-    
+
     const afterMemory = this.performanceService.getMemoryUsage();
-    
+
     return {
       success: true,
       before: beforeMemory,
       after: afterMemory,
       cleaned_metrics: beforeMemory.count - afterMemory.count,
-      freed_memory_kb: beforeMemory.estimatedSizeKB - afterMemory.estimatedSizeKB,
+      freed_memory_kb:
+        beforeMemory.estimatedSizeKB - afterMemory.estimatedSizeKB,
     };
   }
 }

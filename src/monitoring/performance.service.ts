@@ -51,7 +51,7 @@ export class PerformanceService {
           endpoint: metric.endpoint,
           method: metric.method,
           metadata: metric.metadata,
-        }
+        },
       );
     } else if (metric.duration > 500) {
       this.logger.log(
@@ -59,7 +59,7 @@ export class PerformanceService {
         {
           endpoint: metric.endpoint,
           method: metric.method,
-        }
+        },
       );
     }
   }
@@ -67,10 +67,13 @@ export class PerformanceService {
   /**
    * Get performance statistics for a specific operation
    */
-  getOperationStats(operation: string, timeWindowMinutes = 60): PerformanceStats {
+  getOperationStats(
+    operation: string,
+    timeWindowMinutes = 60,
+  ): PerformanceStats {
     const cutoffTime = new Date(Date.now() - timeWindowMinutes * 60 * 1000);
     const relevantMetrics = this.metrics.filter(
-      m => m.operation === operation && m.timestamp >= cutoffTime
+      (m) => m.operation === operation && m.timestamp >= cutoffTime,
     );
 
     if (relevantMetrics.length === 0) {
@@ -86,8 +89,12 @@ export class PerformanceService {
       };
     }
 
-    const durations = relevantMetrics.map(m => m.duration).sort((a, b) => a - b);
-    const errors = relevantMetrics.filter(m => m.statusCode && m.statusCode >= 400);
+    const durations = relevantMetrics
+      .map((m) => m.duration)
+      .sort((a, b) => a - b);
+    const errors = relevantMetrics.filter(
+      (m) => m.statusCode && m.statusCode >= 400,
+    );
 
     return {
       operation,
@@ -106,10 +113,10 @@ export class PerformanceService {
    */
   getSlowestOperations(limit = 10, timeWindowMinutes = 60): PerformanceStats[] {
     const cutoffTime = new Date(Date.now() - timeWindowMinutes * 60 * 1000);
-    const recentMetrics = this.metrics.filter(m => m.timestamp >= cutoffTime);
+    const recentMetrics = this.metrics.filter((m) => m.timestamp >= cutoffTime);
 
     const operationGroups = new Map<string, PerformanceMetric[]>();
-    
+
     for (const metric of recentMetrics) {
       if (!operationGroups.has(metric.operation)) {
         operationGroups.set(metric.operation, []);
@@ -118,10 +125,10 @@ export class PerformanceService {
     }
 
     const stats: PerformanceStats[] = [];
-    
+
     for (const [operation, metrics] of operationGroups) {
-      const durations = metrics.map(m => m.duration).sort((a, b) => a - b);
-      const errors = metrics.filter(m => m.statusCode && m.statusCode >= 400);
+      const durations = metrics.map((m) => m.duration).sort((a, b) => a - b);
+      const errors = metrics.filter((m) => m.statusCode && m.statusCode >= 400);
 
       stats.push({
         operation,
@@ -135,20 +142,22 @@ export class PerformanceService {
       });
     }
 
-    return stats
-      .sort((a, b) => b.p95Duration - a.p95Duration)
-      .slice(0, limit);
+    return stats.sort((a, b) => b.p95Duration - a.p95Duration).slice(0, limit);
   }
 
   /**
    * Get endpoint performance summary
    */
-  getEndpointStats(timeWindowMinutes = 60): { endpoint: string; stats: PerformanceStats }[] {
+  getEndpointStats(
+    timeWindowMinutes = 60,
+  ): { endpoint: string; stats: PerformanceStats }[] {
     const cutoffTime = new Date(Date.now() - timeWindowMinutes * 60 * 1000);
-    const recentMetrics = this.metrics.filter(m => m.timestamp >= cutoffTime && m.endpoint);
+    const recentMetrics = this.metrics.filter(
+      (m) => m.timestamp >= cutoffTime && m.endpoint,
+    );
 
     const endpointGroups = new Map<string, PerformanceMetric[]>();
-    
+
     for (const metric of recentMetrics) {
       const key = `${metric.method} ${metric.endpoint}`;
       if (!endpointGroups.has(key)) {
@@ -158,10 +167,10 @@ export class PerformanceService {
     }
 
     const endpointStats: { endpoint: string; stats: PerformanceStats }[] = [];
-    
+
     for (const [endpoint, metrics] of endpointGroups) {
-      const durations = metrics.map(m => m.duration).sort((a, b) => a - b);
-      const errors = metrics.filter(m => m.statusCode && m.statusCode >= 400);
+      const durations = metrics.map((m) => m.duration).sort((a, b) => a - b);
+      const errors = metrics.filter((m) => m.statusCode && m.statusCode >= 400);
 
       endpointStats.push({
         endpoint,
@@ -178,7 +187,9 @@ export class PerformanceService {
       });
     }
 
-    return endpointStats.sort((a, b) => b.stats.p95Duration - a.stats.p95Duration);
+    return endpointStats.sort(
+      (a, b) => b.stats.p95Duration - a.stats.p95Duration,
+    );
   }
 
   /**
@@ -187,7 +198,7 @@ export class PerformanceService {
   cleanup(olderThanHours = 24): void {
     const cutoffTime = new Date(Date.now() - olderThanHours * 60 * 60 * 1000);
     const initialLength = this.metrics.length;
-    
+
     // Remove metrics older than cutoff
     for (let i = this.metrics.length - 1; i >= 0; i--) {
       if (this.metrics[i].timestamp < cutoffTime) {
@@ -226,20 +237,23 @@ export class PerformanceService {
   } {
     const issues: string[] = [];
     const memoryUsage = this.getMemoryUsage();
-    
+
     // Check for memory usage
-    if (memoryUsage.estimatedSizeKB > 10 * 1024) { // 10MB
+    if (memoryUsage.estimatedSizeKB > 10 * 1024) {
+      // 10MB
       issues.push('High memory usage from performance metrics');
     }
 
     // Check for slow operations
     const last10MinMetrics = this.metrics.filter(
-      m => m.timestamp >= new Date(Date.now() - 10 * 60 * 1000)
+      (m) => m.timestamp >= new Date(Date.now() - 10 * 60 * 1000),
     );
-    const slowOperations = last10MinMetrics.filter(m => m.duration > 1000);
+    const slowOperations = last10MinMetrics.filter((m) => m.duration > 1000);
 
     if (slowOperations.length > 10) {
-      issues.push(`High number of slow operations: ${slowOperations.length} in last 10 minutes`);
+      issues.push(
+        `High number of slow operations: ${slowOperations.length} in last 10 minutes`,
+      );
     }
 
     return {

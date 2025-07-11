@@ -17,7 +17,6 @@ import { AirbnbModule } from './airbnb/airbnb.module';
 import { RateRulesModule } from './rate-rules/rate-rules.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),

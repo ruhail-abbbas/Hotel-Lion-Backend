@@ -121,15 +121,15 @@ describe('Room Creation with Image Upload (e2e)', () => {
       description: 'A test room for integration testing',
       size_sqm: 25,
       bed_setup: '1 Queen Bed',
-      base_price: 120.00,
-      airbnb_price: 130.00,
-      booking_com_price: 140.00,
+      base_price: 120.0,
+      airbnb_price: 130.0,
+      booking_com_price: 140.0,
       max_capacity: 2,
       status: 'available',
       amenities: ['WiFi', 'Air Conditioning', 'TV'],
-      pet_fee: 25.00,
+      pet_fee: 25.0,
       minimum_nights: 2,
-      cleaning_fee: 50.00,
+      cleaning_fee: 50.0,
     };
 
     beforeEach(() => {
@@ -148,7 +148,7 @@ describe('Room Creation with Image Upload (e2e)', () => {
         hotel_id: testHotel.id,
         name: 'Test Room Y1A',
         description: 'A test room for integration testing',
-        base_price: 120.00,
+        base_price: 120.0,
         image_urls: [],
       });
 
@@ -166,11 +166,11 @@ describe('Room Creation with Image Upload (e2e)', () => {
       // Create test image files
       const testImagePath1 = path.join(__dirname, 'test-image-1.jpg');
       const testImagePath2 = path.join(__dirname, 'test-image-2.jpg');
-      
+
       // Create simple test image content (minimal JPEG header)
       const testImageContent = Buffer.from([
-        0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01,
-        0x01, 0x01, 0x00, 0x48, 0x00, 0x48, 0x00, 0x00, 0xFF, 0xD9
+        0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
+        0x01, 0x01, 0x00, 0x48, 0x00, 0x48, 0x00, 0x00, 0xff, 0xd9,
       ]);
 
       fs.writeFileSync(testImagePath1, testImageContent);
@@ -206,7 +206,6 @@ describe('Room Creation with Image Upload (e2e)', () => {
         expect(createdRoom.room_photos).toHaveLength(2);
         expect(createdRoom.room_photos[0].sort_order).toBe(1);
         expect(createdRoom.room_photos[1].sort_order).toBe(2);
-
       } finally {
         // Clean up test files
         if (fs.existsSync(testImagePath1)) fs.unlinkSync(testImagePath1);
@@ -220,7 +219,7 @@ describe('Room Creation with Image Upload (e2e)', () => {
         data: {
           hotel_id: testHotel.id,
           name: 'Duplicate Room Name',
-          base_price: 100.00,
+          base_price: 100.0,
           max_capacity: 2,
         },
       });
@@ -232,8 +231,8 @@ describe('Room Creation with Image Upload (e2e)', () => {
 
       const testImagePath = path.join(__dirname, 'test-rollback-image.jpg');
       const testImageContent = Buffer.from([
-        0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01,
-        0x01, 0x01, 0x00, 0x48, 0x00, 0x48, 0x00, 0x00, 0xFF, 0xD9
+        0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
+        0x01, 0x01, 0x00, 0x48, 0x00, 0x48, 0x00, 0x00, 0xff, 0xd9,
       ]);
       fs.writeFileSync(testImagePath, testImageContent);
 
@@ -267,7 +266,6 @@ describe('Room Creation with Image Upload (e2e)', () => {
         });
 
         expect(roomPhotos).toHaveLength(0); // No photos should exist for failed creation
-
       } finally {
         if (fs.existsSync(testImagePath)) fs.unlinkSync(testImagePath);
       }
@@ -304,7 +302,6 @@ describe('Room Creation with Image Upload (e2e)', () => {
           where: { hotel_id: testHotel.id },
         });
         expect(rooms).toHaveLength(0);
-
       } finally {
         if (fs.existsSync(testTextPath)) fs.unlinkSync(testTextPath);
       }
@@ -383,12 +380,12 @@ describe('Room Creation with Image Upload (e2e)', () => {
     it('should handle large file uploads within limits', async () => {
       // Create a larger test image (but still within 10MB limit)
       const largeImagePath = path.join(__dirname, 'large-test-image.jpg');
-      const largeImageContent = Buffer.alloc(1024 * 1024, 0xFF); // 1MB file
+      const largeImageContent = Buffer.alloc(1024 * 1024, 0xff); // 1MB file
       // Add JPEG header
-      largeImageContent[0] = 0xFF;
-      largeImageContent[1] = 0xD8;
-      largeImageContent[largeImageContent.length - 2] = 0xFF;
-      largeImageContent[largeImageContent.length - 1] = 0xD9;
+      largeImageContent[0] = 0xff;
+      largeImageContent[1] = 0xd8;
+      largeImageContent[largeImageContent.length - 2] = 0xff;
+      largeImageContent[largeImageContent.length - 1] = 0xd9;
 
       fs.writeFileSync(largeImagePath, largeImageContent);
 
@@ -409,7 +406,6 @@ describe('Room Creation with Image Upload (e2e)', () => {
         });
 
         expect(createdRoom.room_photos).toHaveLength(1);
-
       } finally {
         if (fs.existsSync(largeImagePath)) fs.unlinkSync(largeImagePath);
       }
@@ -432,7 +428,7 @@ describe('Room Creation with Image Upload (e2e)', () => {
       const invalidRoomData = {
         hotel_id: '00000000-0000-0000-0000-000000000000', // Non-existent hotel
         name: 'Invalid Room',
-        base_price: 100.00,
+        base_price: 100.0,
         max_capacity: 2,
       };
 

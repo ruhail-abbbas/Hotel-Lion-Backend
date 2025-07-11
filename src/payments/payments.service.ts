@@ -84,21 +84,26 @@ export class PaymentsService {
 
       // Calculate pricing using proper rate rules logic
       const nights = Math.ceil(
-        (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24),
+        (checkOutDate.getTime() - checkInDate.getTime()) /
+          (1000 * 60 * 60 * 24),
       );
 
       // Calculate pricing with rate rules (matching RoomsService logic)
       const basePrice = parseFloat(room.base_price.toString());
-      
+
       // Get platform-specific base price
       let platformBasePrice = basePrice;
       switch (source?.toLowerCase()) {
         case 'airbnb':
-          platformBasePrice = room.airbnb_price ? parseFloat(room.airbnb_price.toString()) : basePrice;
+          platformBasePrice = room.airbnb_price
+            ? parseFloat(room.airbnb_price.toString())
+            : basePrice;
           break;
         case 'booking.com':
         case 'booking_com':
-          platformBasePrice = room.booking_com_price ? parseFloat(room.booking_com_price.toString()) : basePrice;
+          platformBasePrice = room.booking_com_price
+            ? parseFloat(room.booking_com_price.toString())
+            : basePrice;
           break;
         default:
           platformBasePrice = basePrice;
@@ -107,7 +112,7 @@ export class PaymentsService {
       // Pre-filter applicable rate rules
       const checkInTime = checkInDate.getTime();
       const checkOutTime = checkOutDate.getTime();
-      
+
       const applicableRateRules = room.rate_rules
         .filter((rateRule) => {
           const ruleStartTime = new Date(rateRule.start_date).getTime();
@@ -121,20 +126,25 @@ export class PaymentsService {
         }));
 
       // Separate general and day-specific rules
-      const generalRule = applicableRateRules.find(rule => rule.isGeneral);
-      const daySpecificRules = applicableRateRules.filter(rule => !rule.isGeneral);
+      const generalRule = applicableRateRules.find((rule) => rule.isGeneral);
+      const daySpecificRules = applicableRateRules.filter(
+        (rule) => !rule.isGeneral,
+      );
 
       // Create day-of-week lookup map
       const daySpecificLookup = new Map<number, number>();
       for (const rule of daySpecificRules) {
         for (const day of rule.day_of_week) {
           const currentPremium = daySpecificLookup.get(day) || 0;
-          daySpecificLookup.set(day, Math.max(currentPremium, rule.price_per_night));
+          daySpecificLookup.set(
+            day,
+            Math.max(currentPremium, rule.price_per_night),
+          );
         }
       }
 
       let totalRoomCost = 0;
-      
+
       // Calculate cost for each night with rate rules
       for (let i = 0; i < nights; i++) {
         const currentDate = new Date(checkInDate);
@@ -157,14 +167,17 @@ export class PaymentsService {
 
         totalRoomCost += nightRate;
       }
-      
+
       const cleaningFeeCents = parseFloat((room.cleaning_fee || 0).toString());
       const totalCostCents = Math.round(totalRoomCost + cleaningFeeCents); // Total in cents for Stripe
 
       // Debug logging
-      this.logger.log(`Payment calculation: basePrice=${basePrice}, platformBasePrice=${platformBasePrice}, nights=${nights}, totalRoomCost=${totalRoomCost}, cleaningFee=${cleaningFeeCents}, totalCostCents=${totalCostCents}`);
-      this.logger.log(`Rate rules applied: general=${!!generalRule}, daySpecific=${daySpecificRules.length}, applicableRules=${applicableRateRules.length}`);
-
+      this.logger.log(
+        `Payment calculation: basePrice=${basePrice}, platformBasePrice=${platformBasePrice}, nights=${nights}, totalRoomCost=${totalRoomCost}, cleaningFee=${cleaningFeeCents}, totalCostCents=${totalCostCents}`,
+      );
+      this.logger.log(
+        `Rate rules applied: general=${!!generalRule}, daySpecific=${daySpecificRules.length}, applicableRules=${applicableRateRules.length}`,
+      );
 
       // Generate a temporary booking reference for tracking
       const tempBookingRef = `TEMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -175,7 +188,6 @@ export class PaymentsService {
         line_items: [
           {
             price_data: {
-
               currency: 'eur',
 
               product_data: {
@@ -184,7 +196,6 @@ export class PaymentsService {
               },
 
               unit_amount: totalCostCents, // Amount in cents for EUR
-
             },
             quantity: 1,
           },
@@ -225,10 +236,14 @@ export class PaymentsService {
         expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
       });
 
-      this.logger.log(`Created Stripe checkout session ${session.id} for room ${room_id} (${tempBookingRef})`);
+      this.logger.log(
+        `Created Stripe checkout session ${session.id} for room ${room_id} (${tempBookingRef})`,
+      );
 
       if (!session.url) {
-        throw new InternalServerErrorException('Failed to generate checkout URL');
+        throw new InternalServerErrorException(
+          'Failed to generate checkout URL',
+        );
       }
 
       return {
@@ -280,9 +295,7 @@ export class PaymentsService {
       }
 
       if (booking.status !== 'pending') {
-        throw new BadRequestException(
-          'Only pending bookings can be paid for',
-        );
+        throw new BadRequestException('Only pending bookings can be paid for');
       }
 
       // Calculate nights
@@ -298,7 +311,6 @@ export class PaymentsService {
         line_items: [
           {
             price_data: {
-
               currency: 'eur',
 
               product_data: {
@@ -313,8 +325,9 @@ export class PaymentsService {
                 },
               },
 
-              unit_amount: Math.round(parseFloat(booking.total_cost.toString())), // Value already in cents
-
+              unit_amount: Math.round(
+                parseFloat(booking.total_cost.toString()),
+              ), // Value already in cents
             },
             quantity: 1,
           },
@@ -343,10 +356,14 @@ export class PaymentsService {
         expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
       });
 
-      this.logger.log(`Created Stripe checkout session ${session.id} for booking ${booking_id}`);
+      this.logger.log(
+        `Created Stripe checkout session ${session.id} for booking ${booking_id}`,
+      );
 
       if (!session.url) {
-        throw new InternalServerErrorException('Failed to generate checkout URL');
+        throw new InternalServerErrorException(
+          'Failed to generate checkout URL',
+        );
       }
 
       return {
@@ -370,11 +387,10 @@ export class PaymentsService {
     }
   }
 
-  async handleStripeWebhook(
-    signature: string,
-    payload: Buffer,
-  ): Promise<void> {
-    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+  async handleStripeWebhook(signature: string, payload: Buffer): Promise<void> {
+    const webhookSecret = this.configService.get<string>(
+      'STRIPE_WEBHOOK_SECRET',
+    );
     if (!webhookSecret) {
       throw new Error('STRIPE_WEBHOOK_SECRET environment variable is required');
     }
@@ -388,7 +404,9 @@ export class PaymentsService {
         webhookSecret,
       );
     } catch (err) {
-      this.logger.error(`Webhook signature verification failed: ${err.message}`);
+      this.logger.error(
+        `Webhook signature verification failed: ${(err as Error).message}`,
+      );
       throw new BadRequestException('Invalid webhook signature');
     }
 
@@ -397,13 +415,13 @@ export class PaymentsService {
     try {
       switch (event.type) {
         case 'checkout.session.completed':
-          await this.handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+          await this.handleCheckoutSessionCompleted(event.data.object);
           break;
         case 'payment_intent.succeeded':
-          await this.handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+          await this.handlePaymentIntentSucceeded(event.data.object);
           break;
         case 'payment_intent.payment_failed':
-          await this.handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+          await this.handlePaymentIntentFailed(event.data.object);
           break;
         default:
           this.logger.warn(`Unhandled webhook event type: ${event.type}`);
@@ -428,7 +446,9 @@ export class PaymentsService {
       // New flow: Create booking from metadata
       await this.handleNewBookingPayment(session, tempBookingRef);
     } else {
-      this.logger.error('No booking_id or temp_booking_ref found in checkout session metadata');
+      this.logger.error(
+        'No booking_id or temp_booking_ref found in checkout session metadata',
+      );
       return;
     }
   }
@@ -437,7 +457,9 @@ export class PaymentsService {
     session: Stripe.Checkout.Session,
     bookingId: string,
   ): Promise<void> {
-    this.logger.log(`Processing successful checkout for existing booking ${bookingId}`);
+    this.logger.log(
+      `Processing successful checkout for existing booking ${bookingId}`,
+    );
 
     try {
       await this.prisma.$transaction(async (tx) => {
@@ -460,7 +482,10 @@ export class PaymentsService {
         this.logger.log(`Successfully confirmed existing booking ${bookingId}`);
       });
     } catch (error) {
-      this.logger.error(`Failed to process existing booking ${bookingId}:`, error);
+      this.logger.error(
+        `Failed to process existing booking ${bookingId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -469,7 +494,9 @@ export class PaymentsService {
     session: Stripe.Checkout.Session,
     tempBookingRef: string,
   ): Promise<void> {
-    this.logger.log(`Creating new booking from successful payment (${tempBookingRef})`);
+    this.logger.log(
+      `Creating new booking from successful payment (${tempBookingRef})`,
+    );
 
     try {
       const metadata = session.metadata;
@@ -487,7 +514,6 @@ export class PaymentsService {
       const source = metadata.source || 'Website';
 
       const totalCostCents = parseFloat(metadata.total_cost);
-
 
       // Generate real booking reference
       const referenceNumber = await this.generateBookingReference();
@@ -560,12 +586,15 @@ export class PaymentsService {
         );
       });
     } catch (error) {
-      this.logger.error(`Failed to create booking from payment (${tempBookingRef}):`, error);
+      this.logger.error(
+        `Failed to create booking from payment (${tempBookingRef}):`,
+        error,
+      );
       throw error;
     }
   }
 
-  private async handlePaymentIntentSucceeded(
+  private handlePaymentIntentSucceeded(
     paymentIntent: Stripe.PaymentIntent,
   ): Promise<void> {
     const bookingId = paymentIntent.metadata?.booking_id;
@@ -573,9 +602,10 @@ export class PaymentsService {
       this.logger.log(`Payment succeeded for booking ${bookingId}`);
       // Additional logic can be added here if needed
     }
+    return Promise.resolve();
   }
 
-  private async handlePaymentIntentFailed(
+  private handlePaymentIntentFailed(
     paymentIntent: Stripe.PaymentIntent,
   ): Promise<void> {
     const bookingId = paymentIntent.metadata?.booking_id;
@@ -583,15 +613,18 @@ export class PaymentsService {
       this.logger.warn(`Payment failed for booking ${bookingId}`);
       // TODO: Handle failed payment (e.g., notify user, cancel booking after timeout)
     }
+    return Promise.resolve();
   }
 
-  async getPaymentSuccess(sessionId: string): Promise<PaymentSuccessResponseDto> {
+  async getPaymentSuccess(
+    sessionId: string,
+  ): Promise<PaymentSuccessResponseDto> {
     try {
       const session = await this.stripe.checkout.sessions.retrieve(sessionId);
-      
+
       // Handle both old flow (booking_id) and new flow (temp_booking_ref)
       let bookingId = session.metadata?.booking_id;
-      
+
       if (!bookingId && session.metadata?.temp_booking_ref) {
         // New flow: find the actual booking created from this payment
         const payment = await this.prisma.payment.findFirst({
@@ -602,14 +635,16 @@ export class PaymentsService {
             booking: true,
           },
         });
-        
+
         if (payment?.booking) {
           bookingId = payment.booking.id;
         }
       }
 
       if (!bookingId) {
-        throw new BadRequestException('Invalid session or missing booking information');
+        throw new BadRequestException(
+          'Invalid session or missing booking information',
+        );
       }
 
       return {
@@ -621,7 +656,10 @@ export class PaymentsService {
         payment_intent_id: session.payment_intent as string,
       };
     } catch (error) {
-      this.logger.error(`Failed to retrieve payment success data for session ${sessionId}:`, error);
+      this.logger.error(
+        `Failed to retrieve payment success data for session ${sessionId}:`,
+        error,
+      );
       throw new BadRequestException('Invalid payment session');
     }
   }
