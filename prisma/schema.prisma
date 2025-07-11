@@ -14,6 +14,7 @@ datasource db {
 // Enums
 enum UserRole {
   admin
+  staff
   cleaning
 }
 

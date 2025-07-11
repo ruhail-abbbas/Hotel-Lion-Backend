@@ -52,21 +52,21 @@ export class RoomListDto {
   bed_setup: string;
 
   @ApiProperty({
-    description: 'Base price per night in cents (for website/direct bookings)',
-    example: 12000,
+    description: 'Base price per night in Euros (for website/direct bookings)',
+    example: 120.00,
   })
   base_price: number;
 
   @ApiProperty({
-    description: 'Airbnb price per night in cents',
-    example: 13000,
+    description: 'Airbnb price per night in Euros',
+    example: 130.00,
     nullable: true,
   })
   airbnb_price?: number;
 
   @ApiProperty({
-    description: 'Booking.com price per night in cents',
-    example: 14000,
+    description: 'Booking.com price per night in Euros',
+    example: 140.00,
     nullable: true,
   })
   booking_com_price?: number;
@@ -90,8 +90,8 @@ export class RoomListDto {
   amenities: any;
 
   @ApiProperty({
-    description: 'Pet fee in cents',
-    example: 2500,
+    description: 'Pet fee in Euros',
+    example: 25.00,
     nullable: true,
   })
   pet_fee?: number;
@@ -104,8 +104,8 @@ export class RoomListDto {
   minimum_nights?: number;
 
   @ApiProperty({
-    description: 'Cleaning fee in cents',
-    example: 5000,
+    description: 'Cleaning fee in Euros',
+    example: 50.00,
     nullable: true,
   })
   cleaning_fee?: number;
@@ -181,8 +181,8 @@ export class BookingDto {
   status: string;
 
   @ApiProperty({
-    description: 'Total cost in cents',
-    example: 36000,
+    description: 'Total cost in Euros',
+    example: 360.00,
   })
   total_cost: number;
 }
@@ -317,28 +317,28 @@ export class AvailableRoomDto {
   bed_setup: string;
 
   @ApiProperty({
-    description: 'Base price per night in cents (for website/direct bookings)',
-    example: 12000,
+    description: 'Base price per night in Euros (for website/direct bookings)',
+    example: 120.00,
   })
   base_price: number;
 
   @ApiProperty({
-    description: 'Airbnb price per night in cents',
-    example: 13000,
+    description: 'Airbnb price per night in Euros',
+    example: 130.00,
     nullable: true,
   })
   airbnb_price?: number;
 
   @ApiProperty({
-    description: 'Booking.com price per night in cents',
-    example: 14000,
+    description: 'Booking.com price per night in Euros',
+    example: 140.00,
     nullable: true,
   })
   booking_com_price?: number;
 
   @ApiProperty({
-    description: 'Total cost for the stay in cents',
-    example: 36000,
+    description: 'Total cost for the stay in Euros',
+    example: 360.00,
   })
   total_cost: number;
 
@@ -367,8 +367,8 @@ export class AvailableRoomDto {
   amenities: any;
 
   @ApiProperty({
-    description: 'Pet fee in cents',
-    example: 2500,
+    description: 'Pet fee in Euros',
+    example: 25.00,
     nullable: true,
   })
   pet_fee?: number;
@@ -381,8 +381,8 @@ export class AvailableRoomDto {
   minimum_nights?: number;
 
   @ApiProperty({
-    description: 'Cleaning fee in cents',
-    example: 5000,
+    description: 'Cleaning fee in Euros',
+    example: 50.00,
     nullable: true,
   })
   cleaning_fee?: number;

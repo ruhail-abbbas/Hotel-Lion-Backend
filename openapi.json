@@ -958,6 +958,72 @@
       }
     },
     "/api/v1/rooms": {
+      "post": {
+        "description": "Create a new room with room data and optionally upload multiple images in a single atomic operation.",
+        "operationId": "RoomsController_createRoom",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "string",
+                    "description": "JSON string containing room data (CreateRoomDto)",
+                    "example": "{\"hotel_id\":\"123e4567-e89b-12d3-a456-426614174000\",\"name\":\"Y1A\",\"description\":\"Cozy single room with city view\",\"base_price\":120,\"max_capacity\":2}"
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Optional room images (max 10 files)"
+                  }
+                },
+                "required": [
+                  "data"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Room created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateRoomResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data or room name already exists"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "Hotel not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new room with images (Admin only)",
+        "tags": [
+          "Rooms"
+        ]
+      },
       "get": {
         "description": "Get a list of all available rooms for booking with details and photos",
         "operationId": "RoomsController_getAllRooms",
@@ -1501,6 +1567,202 @@
         ]
       }
     },
+    "/api/v1/airbnb/calendar": {
+      "post": {
+        "description": "Retrieves availability calendar data from an Airbnb listing using Apify API. Admin access required.",
+        "operationId": "AirbnbController_getCalendarData",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AirbnbCalendarRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Calendar data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AirbnbCalendarResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "401": {
+            "description": "Unauthorized - JWT token required"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "No calendar data found for the listing"
+          },
+          "502": {
+            "description": "Failed to fetch data from Apify API"
+          }
+        },
+        "summary": "Fetch Airbnb listing calendar data",
+        "tags": [
+          "Airbnb Calendar"
+        ]
+      }
+    },
+    "/api/v1/airbnb/listings": {
+      "post": {
+        "description": "Stores an Airbnb listing URL for a hotel",
+        "operationId": "AirbnbController_createListing",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAirbnbListingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Listing created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AirbnbListingResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          }
+        },
+        "summary": "Create a new Airbnb listing",
+        "tags": [
+          "Airbnb Calendar"
+        ]
+      },
+      "get": {
+        "description": "Retrieves all active Airbnb listings for a specific hotel or room. Use either hotel_id or room_id parameter.",
+        "operationId": "AirbnbController_getListings",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "room_id",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listings retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AirbnbListingResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get Airbnb listings for a hotel or room",
+        "tags": [
+          "Airbnb Calendar"
+        ]
+      }
+    },
+    "/api/v1/airbnb/listings/{id}": {
+      "put": {
+        "description": "Updates an existing Airbnb listing",
+        "operationId": "AirbnbController_updateListing",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAirbnbListingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Listing updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AirbnbListingResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "404": {
+            "description": "Listing not found"
+          }
+        },
+        "summary": "Update an Airbnb listing",
+        "tags": [
+          "Airbnb Calendar"
+        ]
+      },
+      "delete": {
+        "description": "Soft deletes an Airbnb listing by setting is_active to false",
+        "operationId": "AirbnbController_deleteListing",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Listing deleted successfully"
+          }
+        },
+        "summary": "Delete an Airbnb listing",
+        "tags": [
+          "Airbnb Calendar"
+        ]
+      }
+    },
     "/api/v1/bookings": {
       "get": {
         "description": "Get a list of all bookings for a hotel with guest and room details",
@@ -1946,6 +2208,290 @@
           "Payments"
         ]
       }
+    },
+    "/api/v1/rate-rules": {
+      "post": {
+        "description": "Create a new rate rule with premium pricing for specific rooms, dates, and days of the week.",
+        "operationId": "RateRulesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Rate rule creation details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRateRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Rate rule created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateRuleResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data or validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "Room not found"
+          },
+          "409": {
+            "description": "Conflict - Overlapping rate rule exists"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new rate rule (Admin only)",
+        "tags": [
+          "Rate Rules"
+        ]
+      },
+      "get": {
+        "description": "Retrieve all rate rules with optional filtering by room ID, hotel ID, or source platform.",
+        "operationId": "RateRulesController_findAll",
+        "parameters": [
+          {
+            "name": "room_id",
+            "required": false,
+            "in": "query",
+            "description": "Filter by room ID",
+            "schema": {
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          },
+          {
+            "name": "hotel_id",
+            "required": false,
+            "in": "query",
+            "description": "Filter by hotel ID (returns rate rules for all rooms in the hotel)",
+            "schema": {
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "required": false,
+            "in": "query",
+            "description": "Filter by source platform",
+            "schema": {
+              "enum": [
+                "website",
+                "airbnb",
+                "booking.com"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of rate rules retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateRuleListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all rate rules (Admin only)",
+        "tags": [
+          "Rate Rules"
+        ]
+      }
+    },
+    "/api/v1/rate-rules/{id}": {
+      "get": {
+        "description": "Retrieve a specific rate rule by its ID.",
+        "operationId": "RateRulesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Rate rule UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rate rule retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateRuleResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "Rate rule not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get a specific rate rule (Admin only)",
+        "tags": [
+          "Rate Rules"
+        ]
+      },
+      "put": {
+        "description": "Update an existing rate rule with new pricing or date information.",
+        "operationId": "RateRulesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Rate rule UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Rate rule update details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRateRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rate rule updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateRuleResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data or validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "Rate rule not found"
+          },
+          "409": {
+            "description": "Conflict - Overlapping rate rule exists"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update a rate rule (Admin only)",
+        "tags": [
+          "Rate Rules"
+        ]
+      },
+      "delete": {
+        "description": "Delete an existing rate rule permanently.",
+        "operationId": "RateRulesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Rate rule UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rate rule deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Rate rule 123e4567-e89b-12d3-a456-426614174000 has been successfully deleted"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "Rate rule not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a rate rule (Admin only)",
+        "tags": [
+          "Rate Rules"
+        ]
+      }
     }
   },
   "info": {
@@ -2030,7 +2576,7 @@
             "type": "string",
             "enum": [
               "admin",
-              "staff"
+              "cleaning"
             ]
           },
           "created_at": {
@@ -2101,7 +2647,7 @@
             "description": "User role",
             "enum": [
               "admin",
-              "staff"
+              "cleaning"
             ],
             "example": "admin"
           },
@@ -2141,9 +2687,9 @@
             "description": "User role",
             "enum": [
               "admin",
-              "staff"
+              "cleaning"
             ],
-            "example": "staff"
+            "example": "cleaning"
           },
           "phone": {
             "type": "string",
@@ -2905,6 +3451,140 @@
           "months"
         ]
       },
+      "CreateRoomResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Room ID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "hotel_id": {
+            "type": "string",
+            "description": "Hotel ID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Room name",
+            "example": "Y1A"
+          },
+          "description": {
+            "type": "string",
+            "description": "Room description",
+            "example": "Cozy single room with city view and modern amenities"
+          },
+          "size_sqm": {
+            "type": "number",
+            "description": "Room size in square meters",
+            "example": 25
+          },
+          "bed_setup": {
+            "type": "string",
+            "description": "Bed setup description",
+            "example": "1 Queen Bed"
+          },
+          "base_price": {
+            "type": "number",
+            "description": "Base price per night in Euros",
+            "example": 120
+          },
+          "airbnb_price": {
+            "type": "number",
+            "description": "Airbnb price per night in Euros",
+            "example": 134.4,
+            "nullable": true
+          },
+          "booking_com_price": {
+            "type": "number",
+            "description": "Booking.com price per night in Euros",
+            "example": 140.4,
+            "nullable": true
+          },
+          "max_capacity": {
+            "type": "number",
+            "description": "Maximum guest capacity",
+            "example": 2
+          },
+          "status": {
+            "type": "string",
+            "description": "Room status",
+            "enum": [
+              "available",
+              "out_of_service",
+              "cleaning"
+            ],
+            "example": "available"
+          },
+          "amenities": {
+            "description": "Room amenities",
+            "example": [
+              "WiFi",
+              "Air Conditioning",
+              "TV",
+              "Private Bathroom",
+              "Mini Fridge"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pet_fee": {
+            "type": "number",
+            "description": "Pet fee in Euros",
+            "example": 25,
+            "nullable": true
+          },
+          "minimum_nights": {
+            "type": "number",
+            "description": "Minimum nights required for booking",
+            "example": 2,
+            "nullable": true
+          },
+          "cleaning_fee": {
+            "type": "number",
+            "description": "Cleaning fee in Euros",
+            "example": 50,
+            "nullable": true
+          },
+          "image_urls": {
+            "description": "Array of uploaded image URLs",
+            "example": [
+              "/uploads/rooms/image1.jpg",
+              "/uploads/rooms/image2.jpg"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2024-01-10T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "hotel_id",
+          "name",
+          "description",
+          "size_sqm",
+          "bed_setup",
+          "base_price",
+          "airbnb_price",
+          "booking_com_price",
+          "max_capacity",
+          "status",
+          "amenities",
+          "pet_fee",
+          "minimum_nights",
+          "cleaning_fee",
+          "image_urls",
+          "created_at"
+        ]
+      },
       "RoomPhotoDto": {
         "type": "object",
         "properties": {
@@ -2960,19 +3640,19 @@
           },
           "base_price": {
             "type": "number",
-            "description": "Base price per night in cents (for website/direct bookings)",
-            "example": 12000
+            "description": "Base price per night in Euros (for website/direct bookings)",
+            "example": 120
           },
           "airbnb_price": {
             "type": "number",
-            "description": "Airbnb price per night in cents",
-            "example": 13000,
+            "description": "Airbnb price per night in Euros",
+            "example": 130,
             "nullable": true
           },
           "booking_com_price": {
             "type": "number",
-            "description": "Booking.com price per night in cents",
-            "example": 14000,
+            "description": "Booking.com price per night in Euros",
+            "example": 140,
             "nullable": true
           },
           "max_capacity": {
@@ -2993,8 +3673,8 @@
           },
           "pet_fee": {
             "type": "number",
-            "description": "Pet fee in cents",
-            "example": 2500,
+            "description": "Pet fee in Euros",
+            "example": 25,
             "nullable": true
           },
           "minimum_nights": {
@@ -3005,8 +3685,8 @@
           },
           "cleaning_fee": {
             "type": "number",
-            "description": "Cleaning fee in cents",
-            "example": 5000,
+            "description": "Cleaning fee in Euros",
+            "example": 50,
             "nullable": true
           },
           "photos": {
@@ -3091,25 +3771,25 @@
           },
           "base_price": {
             "type": "number",
-            "description": "Base price per night in cents (for website/direct bookings)",
-            "example": 12000
+            "description": "Base price per night in Euros (for website/direct bookings)",
+            "example": 120
           },
           "airbnb_price": {
             "type": "number",
-            "description": "Airbnb price per night in cents",
-            "example": 13000,
+            "description": "Airbnb price per night in Euros",
+            "example": 130,
             "nullable": true
           },
           "booking_com_price": {
             "type": "number",
-            "description": "Booking.com price per night in cents",
-            "example": 14000,
+            "description": "Booking.com price per night in Euros",
+            "example": 140,
             "nullable": true
           },
           "total_cost": {
             "type": "number",
-            "description": "Total cost for the stay in cents",
-            "example": 36000
+            "description": "Total cost for the stay in Euros",
+            "example": 360
           },
           "nights": {
             "type": "number",
@@ -3134,8 +3814,8 @@
           },
           "pet_fee": {
             "type": "number",
-            "description": "Pet fee in cents",
-            "example": 2500,
+            "description": "Pet fee in Euros",
+            "example": 25,
             "nullable": true
           },
           "minimum_nights": {
@@ -3146,8 +3826,8 @@
           },
           "cleaning_fee": {
             "type": "number",
-            "description": "Cleaning fee in cents",
-            "example": 5000,
+            "description": "Cleaning fee in Euros",
+            "example": 50,
             "nullable": true
           },
           "photos": {
@@ -3274,8 +3954,8 @@
           },
           "total_cost": {
             "type": "number",
-            "description": "Total cost in cents",
-            "example": 36000
+            "description": "Total cost in Euros",
+            "example": 360
           }
         },
         "required": [
@@ -3287,6 +3967,37 @@
           "check_out_date",
           "status",
           "total_cost"
+        ]
+      },
+      "AirbnbAvailabilityDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date in YYYY-MM-DD format",
+            "example": "2025-01-08"
+          },
+          "available": {
+            "type": "boolean",
+            "description": "Whether the date is available on Airbnb",
+            "example": true
+          },
+          "availableForCheckin": {
+            "type": "boolean",
+            "description": "Whether the date is available for check-in on Airbnb",
+            "example": true
+          },
+          "availableForCheckout": {
+            "type": "boolean",
+            "description": "Whether the date is available for check-out on Airbnb",
+            "example": true
+          }
+        },
+        "required": [
+          "date",
+          "available",
+          "availableForCheckin",
+          "availableForCheckout"
         ]
       },
       "RoomCalendarDto": {
@@ -3312,6 +4023,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/BookingDto"
+            }
+          },
+          "airbnb_availability": {
+            "description": "Airbnb availability data for this room (if Airbnb listings exist)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AirbnbAvailabilityDto"
             }
           }
         },
@@ -3474,24 +4192,24 @@
           },
           "base_price": {
             "type": "number",
-            "description": "Base price per night in cents (for website/direct bookings)",
-            "example": 12000,
-            "minimum": 100,
-            "maximum": 10000000
+            "description": "Base price per night in Euros (for website/direct bookings)",
+            "example": 120,
+            "minimum": 1,
+            "maximum": 100000
           },
           "airbnb_price": {
             "type": "number",
-            "description": "Airbnb price per night in cents (optional - defaults to base_price if not set)",
-            "example": 13000,
-            "minimum": 100,
-            "maximum": 10000000
+            "description": "Airbnb price per night in Euros (optional - defaults to base_price if not set)",
+            "example": 130,
+            "minimum": 1,
+            "maximum": 100000
           },
           "booking_com_price": {
             "type": "number",
-            "description": "Booking.com price per night in cents (optional - defaults to base_price if not set)",
-            "example": 14000,
-            "minimum": 100,
-            "maximum": 10000000
+            "description": "Booking.com price per night in Euros (optional - defaults to base_price if not set)",
+            "example": 140,
+            "minimum": 1,
+            "maximum": 100000
           },
           "max_capacity": {
             "type": "number",
@@ -3526,10 +4244,10 @@
           },
           "pet_fee": {
             "type": "number",
-            "description": "Pet fee in cents",
-            "example": 2500,
+            "description": "Pet fee in Euros",
+            "example": 25,
             "minimum": 0,
-            "maximum": 1000000
+            "maximum": 10000
           },
           "minimum_nights": {
             "type": "number",
@@ -3540,10 +4258,10 @@
           },
           "cleaning_fee": {
             "type": "number",
-            "description": "Cleaning fee in cents",
-            "example": 5000,
+            "description": "Cleaning fee in Euros",
+            "example": 50,
             "minimum": 0,
-            "maximum": 1000000
+            "maximum": 10000
           }
         }
       },
@@ -3577,19 +4295,19 @@
           },
           "base_price": {
             "type": "number",
-            "description": "Base price per night in cents (for website/direct bookings)",
-            "example": 12000
+            "description": "Base price per night in Euros (for website/direct bookings)",
+            "example": 120
           },
           "airbnb_price": {
             "type": "number",
-            "description": "Airbnb price per night in cents",
-            "example": 13000,
+            "description": "Airbnb price per night in Euros",
+            "example": 130,
             "nullable": true
           },
           "booking_com_price": {
             "type": "number",
-            "description": "Booking.com price per night in cents",
-            "example": 14000,
+            "description": "Booking.com price per night in Euros",
+            "example": 140,
             "nullable": true
           },
           "max_capacity": {
@@ -3623,8 +4341,8 @@
           },
           "pet_fee": {
             "type": "number",
-            "description": "Pet fee in cents",
-            "example": 2500,
+            "description": "Pet fee in Euros",
+            "example": 25,
             "nullable": true
           },
           "minimum_nights": {
@@ -3635,8 +4353,8 @@
           },
           "cleaning_fee": {
             "type": "number",
-            "description": "Cleaning fee in cents",
-            "example": 5000,
+            "description": "Cleaning fee in Euros",
+            "example": 50,
             "nullable": true
           },
           "updated_at": {
@@ -3706,6 +4424,186 @@
         "required": [
           "sort_order"
         ]
+      },
+      "AirbnbCalendarRequestDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Airbnb listing URL",
+            "example": "https://www.airbnb.com/rooms/782682596976136912"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "CalendarDayDto": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "description": "Room is Available or not",
+            "example": "true"
+          },
+          "date": {
+            "type": "string",
+            "description": "Concerned Date",
+            "example": "2025-07-02"
+          },
+          "availableForCheckin": {
+            "type": "boolean",
+            "description": "Whether the date is available for check-in",
+            "example": true
+          },
+          "availableForCheckout": {
+            "type": "boolean",
+            "description": "Whether the date is available for check-out",
+            "example": true
+          }
+        },
+        "required": [
+          "available",
+          "date",
+          "availableForCheckin",
+          "availableForCheckout"
+        ]
+      },
+      "AirbnbCalendarResponseDto": {
+        "type": "object",
+        "properties": {
+          "listingId": {
+            "type": "string",
+            "description": "Airbnb listing ID",
+            "example": "782682596976136912"
+          },
+          "calendar": {
+            "description": "Calendar availability data",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CalendarDayDto"
+            }
+          },
+          "extractedAt": {
+            "type": "string",
+            "description": "Data extraction timestamp",
+            "example": "2025-01-08T12:00:00Z"
+          }
+        },
+        "required": [
+          "listingId",
+          "calendar",
+          "extractedAt"
+        ]
+      },
+      "CreateAirbnbListingDto": {
+        "type": "object",
+        "properties": {
+          "hotel_id": {
+            "type": "string",
+            "description": "Hotel ID that this listing belongs to",
+            "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          },
+          "room_id": {
+            "type": "string",
+            "description": "Room ID that this listing is for",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "listing_url": {
+            "type": "string",
+            "description": "Airbnb listing URL",
+            "example": "https://www.airbnb.com/rooms/782682596976136912"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the Airbnb listing",
+            "example": "Beautiful apartment in downtown"
+          }
+        },
+        "required": [
+          "hotel_id",
+          "room_id",
+          "listing_url"
+        ]
+      },
+      "AirbnbListingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Listing ID",
+            "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          },
+          "hotel_id": {
+            "type": "string",
+            "description": "Hotel ID",
+            "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          },
+          "room_id": {
+            "type": "string",
+            "description": "Room ID",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "listing_url": {
+            "type": "string",
+            "description": "Airbnb listing URL",
+            "example": "https://www.airbnb.com/rooms/782682596976136912"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the Airbnb listing",
+            "example": "Beautiful apartment in downtown"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "Whether the listing is active",
+            "example": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2025-01-08T12:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Last update timestamp",
+            "example": "2025-01-08T12:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "hotel_id",
+          "room_id",
+          "listing_url",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdateAirbnbListingDto": {
+        "type": "object",
+        "properties": {
+          "room_id": {
+            "type": "string",
+            "description": "Room ID that this listing is for",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "listing_url": {
+            "type": "string",
+            "description": "Airbnb listing URL",
+            "example": "https://www.airbnb.com/rooms/782682596976136912"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the Airbnb listing",
+            "example": "Beautiful apartment in downtown"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "Whether the listing is active",
+            "example": true
+          }
+        }
       },
       "BookingResponseDto": {
         "type": "object",
@@ -4379,6 +5277,206 @@
           "amount_paid",
           "payment_intent_id"
         ]
+      },
+      "CreateRateRuleDto": {
+        "type": "object",
+        "properties": {
+          "room_id": {
+            "type": "string",
+            "description": "Room ID that this rate rule applies to",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "start_date": {
+            "type": "string",
+            "description": "Start date for this rate rule (YYYY-MM-DD)",
+            "example": "2025-01-01"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "End date for this rate rule (YYYY-MM-DD)",
+            "example": "2025-12-31"
+          },
+          "price_per_night": {
+            "type": "number",
+            "description": "Premium amount in Euros to add to base price (can be negative for discounts)",
+            "example": 25,
+            "minimum": -999999,
+            "maximum": 999999
+          },
+          "min_stay_nights": {
+            "type": "number",
+            "description": "Minimum nights required for this rate rule",
+            "example": 2,
+            "minimum": 1,
+            "maximum": 365
+          },
+          "day_of_week": {
+            "description": "Array of days of the week this rule applies to (0=Sunday, 1=Monday, ..., 6=Saturday)",
+            "example": [
+              5,
+              6
+            ],
+            "minItems": 1,
+            "maxItems": 7,
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "source": {
+            "type": "string",
+            "description": "Source platform this rate rule applies to",
+            "example": "website",
+            "enum": [
+              "website",
+              "airbnb",
+              "booking.com"
+            ]
+          }
+        },
+        "required": [
+          "room_id",
+          "start_date",
+          "end_date",
+          "price_per_night",
+          "day_of_week"
+        ]
+      },
+      "RateRuleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Rate rule ID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "room_id": {
+            "type": "string",
+            "description": "Room ID that this rate rule applies to",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "start_date": {
+            "type": "string",
+            "description": "Start date for this rate rule",
+            "example": "2025-01-01"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "End date for this rate rule",
+            "example": "2025-12-31"
+          },
+          "price_per_night": {
+            "type": "number",
+            "description": "Premium amount in Euros to add to base price",
+            "example": 25
+          },
+          "min_stay_nights": {
+            "type": "number",
+            "description": "Minimum nights required for this rate rule",
+            "example": 2,
+            "nullable": true
+          },
+          "day_of_week": {
+            "description": "Array of days of the week this rule applies to (0=Sunday, 1=Monday, ..., 6=Saturday)",
+            "example": [
+              5,
+              6
+            ],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "source": {
+            "type": "string",
+            "description": "Source platform this rate rule applies to",
+            "example": "website",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "room_id",
+          "start_date",
+          "end_date",
+          "price_per_night",
+          "min_stay_nights",
+          "day_of_week",
+          "source"
+        ]
+      },
+      "RateRuleListResponseDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "Total number of rate rules",
+            "example": 15
+          },
+          "rate_rules": {
+            "description": "List of rate rules",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RateRuleResponseDto"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "rate_rules"
+        ]
+      },
+      "UpdateRateRuleDto": {
+        "type": "object",
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "description": "Start date for this rate rule (YYYY-MM-DD)",
+            "example": "2025-01-01"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "End date for this rate rule (YYYY-MM-DD)",
+            "example": "2025-12-31"
+          },
+          "price_per_night": {
+            "type": "number",
+            "description": "Premium amount in Euros to add to base price (can be negative for discounts)",
+            "example": 25,
+            "minimum": -999999,
+            "maximum": 999999
+          },
+          "min_stay_nights": {
+            "type": "number",
+            "description": "Minimum nights required for this rate rule",
+            "example": 2,
+            "minimum": 1,
+            "maximum": 365
+          },
+          "day_of_week": {
+            "description": "Array of days of the week this rule applies to (0=Sunday, 1=Monday, ..., 6=Saturday)",
+            "example": [
+              5,
+              6
+            ],
+            "minItems": 1,
+            "maxItems": 7,
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "source": {
+            "type": "string",
+            "description": "Source platform this rate rule applies to",
+            "example": "website",
+            "enum": [
+              "website",
+              "airbnb",
+              "booking.com"
+            ]
+          }
+        }
       }
     }
   }

@@ -1,24 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx prettier:*)",
-      "Bash(npx ts-node:*)",
-      "Bash(find:*)",
-      "Bash(npx prisma generate:*)",
-      "Bash(npx prisma migrate dev:*)",
-      "Bash(npx prisma migrate reset:*)",
-      "Bash(npx prisma:*)",
-      "Bash(pnpm run:*)",
-      "Bash(grep:*)"
-      "Bash(pnpm add:*)",
-      "Bash(mkdir:*)",
-      "Bash(pnpm run lint:*)",
-      "Bash(pnpm run:*)",
-      "Bash(npx prisma migrate dev:*)",
-      "Bash(grep:*)",
-      "Bash(find:*)",
-      "Bash(psql:*)",
-      "Bash(PGPASSWORD=newpassword psql:*)"
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }

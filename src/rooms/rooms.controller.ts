@@ -10,10 +10,11 @@ import {
   Body,
   BadRequestException,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
   UseGuards,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -38,6 +39,7 @@ import {
   RoomStatusResponseDto,
 } from './dto/update-room-status.dto';
 import { EditRoomDto, EditRoomResponseDto } from './dto/edit-room.dto';
+import { CreateRoomDto, CreateRoomResponseDto } from './dto/create-room.dto';
 import {
   UploadRoomImageDto,
   UpdateRoomImageOrderDto,
@@ -51,6 +53,102 @@ import { Roles } from '../auth/decorators/roles.decorator';
 @Controller('api/v1/rooms')
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      storage: diskStorage({
+        destination: './uploads/rooms',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = uuidv4();
+          const ext = extname(file.originalname);
+          const filename = `${uniqueSuffix}${ext}`;
+          callback(null, filename);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+          return callback(new Error('Only image files are allowed!'), false);
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit per file
+        files: 10, // Maximum 10 files
+      },
+    }),
+  )
+  @ApiOperation({
+    summary: 'Create a new room with images (Admin only)',
+    description:
+      'Create a new room with room data and optionally upload multiple images in a single atomic operation.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'string',
+          description: 'JSON string containing room data (CreateRoomDto)',
+          example: JSON.stringify({
+            hotel_id: '123e4567-e89b-12d3-a456-426614174000',
+            name: 'Y1A',
+            description: 'Cozy single room with city view',
+            base_price: 120.00,
+            max_capacity: 2,
+          }),
+        },
+        images: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+          description: 'Optional room images (max 10 files)',
+        },
+      },
+      required: ['data'],
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Room created successfully',
+    type: CreateRoomResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data or room name already exists',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Hotel not found',
+  })
+  async createRoom(
+    @Body('data') data: string,
+    @UploadedFiles() files?: Express.Multer.File[],
+  ): Promise<CreateRoomResponseDto> {
+    // Parse JSON data
+    let createRoomDto: CreateRoomDto;
+    try {
+      createRoomDto = JSON.parse(data);
+    } catch (error) {
+      throw new BadRequestException('Invalid JSON data format');
+    }
+
+    return this.roomsService.createRoom(createRoomDto, files);
+  }
 
   @Get()
   @ApiOperation({

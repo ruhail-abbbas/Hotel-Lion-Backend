@@ -82,17 +82,88 @@ export class PaymentsService {
       // Check room availability (without creating booking)
       await this.checkRoomAvailability(room_id, checkInDate, checkOutDate);
 
-      // Calculate pricing using RoomsService-like logic
+      // Calculate pricing using proper rate rules logic
       const nights = Math.ceil(
         (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24),
       );
 
+      // Calculate pricing with rate rules (matching RoomsService logic)
+      const basePrice = parseFloat(room.base_price.toString());
+      
+      // Get platform-specific base price
+      let platformBasePrice = basePrice;
+      switch (source?.toLowerCase()) {
+        case 'airbnb':
+          platformBasePrice = room.airbnb_price ? parseFloat(room.airbnb_price.toString()) : basePrice;
+          break;
+        case 'booking.com':
+        case 'booking_com':
+          platformBasePrice = room.booking_com_price ? parseFloat(room.booking_com_price.toString()) : basePrice;
+          break;
+        default:
+          platformBasePrice = basePrice;
+      }
 
-      // All prices are now in euros (no cents)
-      const basePriceEuros = parseFloat((room.base_price || 0).toString());
-      const cleaningFeeEuros = parseFloat((room.cleaning_fee || 0).toString());
-      const totalCostEuros = (basePriceEuros * nights) + cleaningFeeEuros;
-      const totalCostCents = Math.round(totalCostEuros * 100); // Convert to cents only for Stripe
+      // Pre-filter applicable rate rules
+      const checkInTime = checkInDate.getTime();
+      const checkOutTime = checkOutDate.getTime();
+      
+      const applicableRateRules = room.rate_rules
+        .filter((rateRule) => {
+          const ruleStartTime = new Date(rateRule.start_date).getTime();
+          const ruleEndTime = new Date(rateRule.end_date).getTime();
+          return ruleStartTime <= checkOutTime && ruleEndTime >= checkInTime;
+        })
+        .map((rule) => ({
+          price_per_night: parseFloat(rule.price_per_night.toString()),
+          day_of_week: rule.day_of_week,
+          isGeneral: rule.day_of_week.length === 7,
+        }));
+
+      // Separate general and day-specific rules
+      const generalRule = applicableRateRules.find(rule => rule.isGeneral);
+      const daySpecificRules = applicableRateRules.filter(rule => !rule.isGeneral);
+
+      // Create day-of-week lookup map
+      const daySpecificLookup = new Map<number, number>();
+      for (const rule of daySpecificRules) {
+        for (const day of rule.day_of_week) {
+          const currentPremium = daySpecificLookup.get(day) || 0;
+          daySpecificLookup.set(day, Math.max(currentPremium, rule.price_per_night));
+        }
+      }
+
+      let totalRoomCost = 0;
+      
+      // Calculate cost for each night with rate rules
+      for (let i = 0; i < nights; i++) {
+        const currentDate = new Date(checkInDate);
+        currentDate.setDate(checkInDate.getDate() + i);
+        const dayOfWeek = currentDate.getDay();
+
+        // Start with platform base price
+        let nightRate = platformBasePrice;
+
+        // Apply general rule if exists
+        if (generalRule) {
+          nightRate = basePrice + generalRule.price_per_night;
+        }
+
+        // Apply day-specific rule if exists (overrides general)
+        const daySpecificPremium = daySpecificLookup.get(dayOfWeek);
+        if (daySpecificPremium !== undefined) {
+          nightRate = basePrice + daySpecificPremium;
+        }
+
+        totalRoomCost += nightRate;
+      }
+      
+      const cleaningFeeCents = parseFloat((room.cleaning_fee || 0).toString());
+      const totalCostCents = Math.round(totalRoomCost + cleaningFeeCents); // Total in cents for Stripe
+
+      // Debug logging
+      this.logger.log(`Payment calculation: basePrice=${basePrice}, platformBasePrice=${platformBasePrice}, nights=${nights}, totalRoomCost=${totalRoomCost}, cleaningFee=${cleaningFeeCents}, totalCostCents=${totalCostCents}`);
+      this.logger.log(`Rate rules applied: general=${!!generalRule}, daySpecific=${daySpecificRules.length}, applicableRules=${applicableRateRules.length}`);
 
 
       // Generate a temporary booking reference for tracking
@@ -134,7 +205,7 @@ export class PaymentsService {
           adults: adults.toString(),
           infants: infants.toString(),
 
-          total_cost: totalCostEuros.toString(),
+          total_cost: totalCostCents.toString(),
 
           hotel_name: room.hotel.name,
           room_name: room.name,
@@ -151,7 +222,7 @@ export class PaymentsService {
           enabled: true,
         },
         allow_promotion_codes: false,
-        expires_at: Math.floor(Date.now() / 1000) + 1200, // 1 hour from now
+        expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
       });
 
       this.logger.log(`Created Stripe checkout session ${session.id} for room ${room_id} (${tempBookingRef})`);
@@ -242,7 +313,7 @@ export class PaymentsService {
                 },
               },
 
-              unit_amount: Math.round(parseFloat(booking.total_cost.toString()) * 100), // Convert euros to cents for Stripe
+              unit_amount: Math.round(parseFloat(booking.total_cost.toString())), // Value already in cents
 
             },
             quantity: 1,
@@ -380,7 +451,7 @@ export class PaymentsService {
         await tx.payment.create({
           data: {
             booking_id: bookingId,
-            amount: session.amount_total || 0,
+            amount: session.amount_total || 0, // Keep in cents to match database storage
             payment_method: 'Card',
             identifier: session.payment_intent as string,
           },
@@ -415,7 +486,7 @@ export class PaymentsService {
       const guestContact = metadata.guest_contact || null;
       const source = metadata.source || 'Website';
 
-      const totalCost = parseFloat(metadata.total_cost);
+      const totalCostCents = parseFloat(metadata.total_cost);
 
 
       // Generate real booking reference
@@ -467,7 +538,7 @@ export class PaymentsService {
             check_in_date: checkInDate,
             check_out_date: checkOutDate,
 
-            total_cost: parseFloat(totalCost.toFixed(2)), // Store in euros
+            total_cost: totalCostCents, // Already in cents
 
             source: source,
             status: 'confirmed', // Directly confirmed since payment succeeded
@@ -478,7 +549,7 @@ export class PaymentsService {
         await tx.payment.create({
           data: {
             booking_id: booking.id,
-            amount: session.amount_total || 0,
+            amount: session.amount_total || 0, // Keep in cents to match database storage
             payment_method: 'Card',
             identifier: session.payment_intent as string,
           },
@@ -545,7 +616,7 @@ export class PaymentsService {
         message: 'Payment completed successfully',
         booking_id: bookingId,
 
-        amount_paid: parseFloat(((session.amount_total || 0) / 100).toFixed(2)), // Convert cents to euros
+        amount_paid: parseFloat(((session.amount_total || 0) / 100).toFixed(2)), // Convert cents to euros for display
 
         payment_intent_id: session.payment_intent as string,
       };
