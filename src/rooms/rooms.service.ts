@@ -202,9 +202,26 @@ export class RoomsService {
       },
     });
 
+    // Transform rooms data to match RoomWithBookings type
+    const transformedRooms: RoomWithBookings[] = rooms.map((room) => ({
+      id: room.id,
+      name: room.name,
+      status: room.status,
+      bookings: room.bookings.map((booking) => ({
+        id: booking.id,
+        reference_number: booking.reference_number,
+        guest_name: booking.guest_name,
+        guest_email: booking.guest_email,
+        check_in_date: booking.check_in_date,
+        check_out_date: booking.check_out_date,
+        status: booking.status,
+        total_cost: parseFloat(booking.total_cost.toString()),
+      })),
+    }));
+
     // Fetch Airbnb availability data for all rooms
     const roomsWithAirbnb = await this.fetchAirbnbDataForRooms(
-      rooms,
+      transformedRooms,
       startDate,
       endDate,
     );
@@ -223,7 +240,7 @@ export class RoomsService {
           check_in_date: booking.check_in_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
           check_out_date: booking.check_out_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
           status: booking.status,
-          total_cost: parseFloat(booking.total_cost.toString()),
+          total_cost: booking.total_cost, // Already converted to number
         }),
       ),
       airbnb_availability: room.airbnb_availability || [],
