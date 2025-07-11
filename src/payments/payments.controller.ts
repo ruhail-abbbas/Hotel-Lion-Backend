@@ -171,11 +171,13 @@ export class PaymentsController {
     status: 200,
     description: 'Payment cancellation handled',
   })
-  async handlePaymentCancel(
-    @Query('session_id') sessionId?: string,
-  ): Promise<{ message: string; session_id?: string }> {
+  handlePaymentCancel(@Query('session_id') sessionId?: string): {
+    message: string;
+    session_id?: string;
+  } {
     return {
-      message: 'Payment was cancelled. You can retry payment or return to booking.',
+      message:
+        'Payment was cancelled. You can retry payment or return to booking.',
       ...(sessionId && { session_id: sessionId }),
     };
   }

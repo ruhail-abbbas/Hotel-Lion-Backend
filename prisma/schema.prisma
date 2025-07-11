@@ -16,6 +16,7 @@ datasource db {
 enum UserRole {
   admin
   staff
+  cleaning
 }
 
 enum PaymentMethod {

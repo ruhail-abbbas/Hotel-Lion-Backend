@@ -123,7 +123,10 @@ export class CleaningService {
           staff.phone !== null && staff.phone.length > 0,
       );
     } catch (error) {
-      this.logger.error('Error fetching cleaning staff:', error);
+      this.logger.error(
+        'Error fetching cleaning staff:',
+        error instanceof Error ? error.message : String(error),
+      );
       return [];
     }
   }

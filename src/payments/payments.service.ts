@@ -84,16 +84,15 @@ export class PaymentsService {
 
       // Calculate pricing using RoomsService-like logic
       const nights = Math.ceil(
-        (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24),
+        (checkOutDate.getTime() - checkInDate.getTime()) /
+          (1000 * 60 * 60 * 24),
       );
-
 
       // All prices are now in euros (no cents)
       const basePriceEuros = parseFloat((room.base_price || 0).toString());
       const cleaningFeeEuros = parseFloat((room.cleaning_fee || 0).toString());
-      const totalCostEuros = (basePriceEuros * nights) + cleaningFeeEuros;
+      const totalCostEuros = basePriceEuros * nights + cleaningFeeEuros;
       const totalCostCents = Math.round(totalCostEuros * 100); // Convert to cents only for Stripe
-
 
       // Generate a temporary booking reference for tracking
       const tempBookingRef = `TEMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -104,7 +103,6 @@ export class PaymentsService {
         line_items: [
           {
             price_data: {
-
               currency: 'eur',
 
               product_data: {
@@ -113,7 +111,6 @@ export class PaymentsService {
               },
 
               unit_amount: totalCostCents, // Amount in cents for EUR
-
             },
             quantity: 1,
           },
@@ -154,10 +151,14 @@ export class PaymentsService {
         expires_at: Math.floor(Date.now() / 1000) + 1200, // 1 hour from now
       });
 
-      this.logger.log(`Created Stripe checkout session ${session.id} for room ${room_id} (${tempBookingRef})`);
+      this.logger.log(
+        `Created Stripe checkout session ${session.id} for room ${room_id} (${tempBookingRef})`,
+      );
 
       if (!session.url) {
-        throw new InternalServerErrorException('Failed to generate checkout URL');
+        throw new InternalServerErrorException(
+          'Failed to generate checkout URL',
+        );
       }
 
       return {
@@ -209,9 +210,7 @@ export class PaymentsService {
       }
 
       if (booking.status !== 'pending') {
-        throw new BadRequestException(
-          'Only pending bookings can be paid for',
-        );
+        throw new BadRequestException('Only pending bookings can be paid for');
       }
 
       // Calculate nights
@@ -227,7 +226,6 @@ export class PaymentsService {
         line_items: [
           {
             price_data: {
-
               currency: 'eur',
 
               product_data: {
@@ -242,8 +240,9 @@ export class PaymentsService {
                 },
               },
 
-              unit_amount: Math.round(parseFloat(booking.total_cost.toString()) * 100), // Convert euros to cents for Stripe
-
+              unit_amount: Math.round(
+                parseFloat(booking.total_cost.toString()) * 100,
+              ), // Convert euros to cents for Stripe
             },
             quantity: 1,
           },
@@ -272,10 +271,14 @@ export class PaymentsService {
         expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
       });
 
-      this.logger.log(`Created Stripe checkout session ${session.id} for booking ${booking_id}`);
+      this.logger.log(
+        `Created Stripe checkout session ${session.id} for booking ${booking_id}`,
+      );
 
       if (!session.url) {
-        throw new InternalServerErrorException('Failed to generate checkout URL');
+        throw new InternalServerErrorException(
+          'Failed to generate checkout URL',
+        );
       }
 
       return {
@@ -299,11 +302,10 @@ export class PaymentsService {
     }
   }
 
-  async handleStripeWebhook(
-    signature: string,
-    payload: Buffer,
-  ): Promise<void> {
-    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+  async handleStripeWebhook(signature: string, payload: Buffer): Promise<void> {
+    const webhookSecret = this.configService.get<string>(
+      'STRIPE_WEBHOOK_SECRET',
+    );
     if (!webhookSecret) {
       throw new Error('STRIPE_WEBHOOK_SECRET environment variable is required');
     }
@@ -317,7 +319,9 @@ export class PaymentsService {
         webhookSecret,
       );
     } catch (err) {
-      this.logger.error(`Webhook signature verification failed: ${err.message}`);
+      this.logger.error(
+        `Webhook signature verification failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
       throw new BadRequestException('Invalid webhook signature');
     }
 
@@ -326,13 +330,13 @@ export class PaymentsService {
     try {
       switch (event.type) {
         case 'checkout.session.completed':
-          await this.handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+          await this.handleCheckoutSessionCompleted(event.data.object);
           break;
         case 'payment_intent.succeeded':
-          await this.handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+          this.handlePaymentIntentSucceeded(event.data.object);
           break;
         case 'payment_intent.payment_failed':
-          await this.handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+          this.handlePaymentIntentFailed(event.data.object);
           break;
         default:
           this.logger.warn(`Unhandled webhook event type: ${event.type}`);
@@ -357,7 +361,9 @@ export class PaymentsService {
       // New flow: Create booking from metadata
       await this.handleNewBookingPayment(session, tempBookingRef);
     } else {
-      this.logger.error('No booking_id or temp_booking_ref found in checkout session metadata');
+      this.logger.error(
+        'No booking_id or temp_booking_ref found in checkout session metadata',
+      );
       return;
     }
   }
@@ -366,7 +372,9 @@ export class PaymentsService {
     session: Stripe.Checkout.Session,
     bookingId: string,
   ): Promise<void> {
-    this.logger.log(`Processing successful checkout for existing booking ${bookingId}`);
+    this.logger.log(
+      `Processing successful checkout for existing booking ${bookingId}`,
+    );
 
     try {
       await this.prisma.$transaction(async (tx) => {
@@ -389,7 +397,10 @@ export class PaymentsService {
         this.logger.log(`Successfully confirmed existing booking ${bookingId}`);
       });
     } catch (error) {
-      this.logger.error(`Failed to process existing booking ${bookingId}:`, error);
+      this.logger.error(
+        `Failed to process existing booking ${bookingId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -398,7 +409,9 @@ export class PaymentsService {
     session: Stripe.Checkout.Session,
     tempBookingRef: string,
   ): Promise<void> {
-    this.logger.log(`Creating new booking from successful payment (${tempBookingRef})`);
+    this.logger.log(
+      `Creating new booking from successful payment (${tempBookingRef})`,
+    );
 
     try {
       const metadata = session.metadata;
@@ -416,7 +429,6 @@ export class PaymentsService {
       const source = metadata.source || 'Website';
 
       const totalCost = parseFloat(metadata.total_cost);
-
 
       // Generate real booking reference
       const referenceNumber = await this.generateBookingReference();
@@ -489,14 +501,17 @@ export class PaymentsService {
         );
       });
     } catch (error) {
-      this.logger.error(`Failed to create booking from payment (${tempBookingRef}):`, error);
+      this.logger.error(
+        `Failed to create booking from payment (${tempBookingRef}):`,
+        error,
+      );
       throw error;
     }
   }
 
-  private async handlePaymentIntentSucceeded(
+  private handlePaymentIntentSucceeded(
     paymentIntent: Stripe.PaymentIntent,
-  ): Promise<void> {
+  ): void {
     const bookingId = paymentIntent.metadata?.booking_id;
     if (bookingId) {
       this.logger.log(`Payment succeeded for booking ${bookingId}`);
@@ -504,9 +519,7 @@ export class PaymentsService {
     }
   }
 
-  private async handlePaymentIntentFailed(
-    paymentIntent: Stripe.PaymentIntent,
-  ): Promise<void> {
+  private handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent): void {
     const bookingId = paymentIntent.metadata?.booking_id;
     if (bookingId) {
       this.logger.warn(`Payment failed for booking ${bookingId}`);
@@ -514,13 +527,15 @@ export class PaymentsService {
     }
   }
 
-  async getPaymentSuccess(sessionId: string): Promise<PaymentSuccessResponseDto> {
+  async getPaymentSuccess(
+    sessionId: string,
+  ): Promise<PaymentSuccessResponseDto> {
     try {
       const session = await this.stripe.checkout.sessions.retrieve(sessionId);
-      
+
       // Handle both old flow (booking_id) and new flow (temp_booking_ref)
       let bookingId = session.metadata?.booking_id;
-      
+
       if (!bookingId && session.metadata?.temp_booking_ref) {
         // New flow: find the actual booking created from this payment
         const payment = await this.prisma.payment.findFirst({
@@ -531,14 +546,16 @@ export class PaymentsService {
             booking: true,
           },
         });
-        
+
         if (payment?.booking) {
           bookingId = payment.booking.id;
         }
       }
 
       if (!bookingId) {
-        throw new BadRequestException('Invalid session or missing booking information');
+        throw new BadRequestException(
+          'Invalid session or missing booking information',
+        );
       }
 
       return {
@@ -550,7 +567,10 @@ export class PaymentsService {
         payment_intent_id: session.payment_intent as string,
       };
     } catch (error) {
-      this.logger.error(`Failed to retrieve payment success data for session ${sessionId}:`, error);
+      this.logger.error(
+        `Failed to retrieve payment success data for session ${sessionId}:`,
+        error,
+      );
       throw new BadRequestException('Invalid payment session');
     }
   }

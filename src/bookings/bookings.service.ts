@@ -108,7 +108,20 @@ export class BookingsService {
 
     // Calculate the total cost using the room pricing logic
     const { totalCost } = this.roomsService.calculateRoomPricing(
-      room,
+      {
+        id: room.id,
+        base_price: parseFloat(room.base_price.toString()),
+        airbnb_price: room.airbnb_price
+          ? parseFloat(room.airbnb_price.toString())
+          : undefined,
+        booking_com_price: room.booking_com_price
+          ? parseFloat(room.booking_com_price.toString())
+          : undefined,
+        rate_rules: room.rate_rules.map((rule) => ({
+          ...rule,
+          price_per_night: parseFloat(rule.price_per_night.toString()),
+        })),
+      },
       checkInDate,
       checkOutDate,
     );

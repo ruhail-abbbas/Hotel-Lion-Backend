@@ -12,7 +12,8 @@
       "Bash(timeout 60 npx prisma db push --accept-data-loss)",
       "Bash(timeout:*)",
       "Bash(pnpm prisma:*)",
-      "Bash(npx prisma db pull:*)"
+      "Bash(npx prisma db pull:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }
