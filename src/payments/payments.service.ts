@@ -179,6 +179,7 @@ export class PaymentsService {
         `Rate rules applied: general=${!!generalRule}, daySpecific=${daySpecificRules.length}, applicableRules=${applicableRateRules.length}`,
       );
 
+
       // Generate a temporary booking reference for tracking
       const tempBookingRef = `TEMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -326,8 +327,10 @@ export class PaymentsService {
               },
 
               unit_amount: Math.round(
+
                 parseFloat(booking.total_cost.toString()),
               ), // Value already in cents
+
             },
             quantity: 1,
           },
@@ -405,7 +408,9 @@ export class PaymentsService {
       );
     } catch (err) {
       this.logger.error(
+
         `Webhook signature verification failed: ${(err as Error).message}`,
+
       );
       throw new BadRequestException('Invalid webhook signature');
     }
@@ -418,10 +423,12 @@ export class PaymentsService {
           await this.handleCheckoutSessionCompleted(event.data.object);
           break;
         case 'payment_intent.succeeded':
+
           await this.handlePaymentIntentSucceeded(event.data.object);
           break;
         case 'payment_intent.payment_failed':
           await this.handlePaymentIntentFailed(event.data.object);
+
           break;
         default:
           this.logger.warn(`Unhandled webhook event type: ${event.type}`);
@@ -515,6 +522,7 @@ export class PaymentsService {
 
       const totalCostCents = parseFloat(metadata.total_cost);
 
+
       // Generate real booking reference
       const referenceNumber = await this.generateBookingReference();
 
@@ -596,7 +604,7 @@ export class PaymentsService {
 
   private handlePaymentIntentSucceeded(
     paymentIntent: Stripe.PaymentIntent,
-  ): Promise<void> {
+  ): void {
     const bookingId = paymentIntent.metadata?.booking_id;
     if (bookingId) {
       this.logger.log(`Payment succeeded for booking ${bookingId}`);
@@ -605,9 +613,11 @@ export class PaymentsService {
     return Promise.resolve();
   }
 
+
   private handlePaymentIntentFailed(
     paymentIntent: Stripe.PaymentIntent,
   ): Promise<void> {
+
     const bookingId = paymentIntent.metadata?.booking_id;
     if (bookingId) {
       this.logger.warn(`Payment failed for booking ${bookingId}`);

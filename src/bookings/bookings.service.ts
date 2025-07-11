@@ -108,6 +108,7 @@ export class BookingsService {
 
     // Calculate the total cost using the room pricing logic
     const { totalCost } = this.roomsService.calculateRoomPricing(
+
       room as any,
       checkInDate,
       checkOutDate,

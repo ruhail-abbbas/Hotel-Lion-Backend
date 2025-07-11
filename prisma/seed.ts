@@ -63,13 +63,13 @@ async function main() {
     {
       email: 'cleaning1@hotel-lion.com',
       password: 'cleaning123',
-      role: UserRole.cleaning,
+      role: UserRole.staff,
       phone: '+923335037773',
     },
     {
       email: 'cleaning2@hotel-lion.com',
       password: 'cleaning123',
-      role: UserRole.cleaning,
+      role: UserRole.staff,
       phone: '+923335037773',
     },
   ];
