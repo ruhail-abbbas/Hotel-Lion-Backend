@@ -233,10 +233,10 @@ export class RoomsService {
           base_price: this.parseDecimalToFloat(room.base_price),
           airbnb_price: room.airbnb_price !== null && room.airbnb_price !== undefined
             ? this.parseDecimalToFloat(room.airbnb_price)
-            : null,
+            : undefined,
           booking_com_price: room.booking_com_price !== null && room.booking_com_price !== undefined
             ? this.parseDecimalToFloat(room.booking_com_price)
-            : null,
+            : undefined,
           rate_rules: room.rate_rules.map((rule) => ({
             ...rule,
             price_per_night: this.parseDecimalToFloat(rule.price_per_night),
@@ -600,10 +600,10 @@ export class RoomsService {
           base_price: this.parseDecimalToFloat(room.base_price),
           airbnb_price: room.airbnb_price !== null && room.airbnb_price !== undefined
             ? this.parseDecimalToFloat(room.airbnb_price)
-            : null,
+            : undefined,
           booking_com_price: room.booking_com_price !== null && room.booking_com_price !== undefined
             ? this.parseDecimalToFloat(room.booking_com_price)
-            : null,
+            : undefined,
 
           rate_rules: room.rate_rules.map((rule) => ({
             ...rule,
@@ -622,10 +622,10 @@ export class RoomsService {
           base_price: this.parseDecimalToFloat(room.base_price),
           airbnb_price: room.airbnb_price !== null && room.airbnb_price !== undefined
             ? this.parseDecimalToFloat(room.airbnb_price)
-            : null,
+            : undefined,
           booking_com_price: room.booking_com_price !== null && room.booking_com_price !== undefined
             ? this.parseDecimalToFloat(room.booking_com_price)
-            : null,
+            : undefined,
 
         },
         platform,
@@ -701,10 +701,10 @@ export class RoomsService {
           base_price: this.parseDecimalToFloat(room.base_price),
           airbnb_price: room.airbnb_price !== null && room.airbnb_price !== undefined
             ? this.parseDecimalToFloat(room.airbnb_price)
-            : null,
+            : undefined,
           booking_com_price: room.booking_com_price !== null && room.booking_com_price !== undefined
             ? this.parseDecimalToFloat(room.booking_com_price)
-            : null,
+            : undefined,
         },
         platform,
       );
@@ -725,10 +725,10 @@ export class RoomsService {
         base_price: basePrice,
         airbnb_price: room.airbnb_price
           ? this.parseDecimalToFloat(room.airbnb_price)
-          : null,
+          : undefined,
         booking_com_price: room.booking_com_price
           ? this.parseDecimalToFloat(room.booking_com_price)
-          : null,
+          : undefined,
       },
       platform,
     );

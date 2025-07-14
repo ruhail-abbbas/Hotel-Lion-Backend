@@ -610,7 +610,6 @@ export class PaymentsService {
       this.logger.log(`Payment succeeded for booking ${bookingId}`);
       // Additional logic can be added here if needed
     }
-    return Promise.resolve();
   }
 
 
