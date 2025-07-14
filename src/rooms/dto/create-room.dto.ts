@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
   IsOptional,
+  IsNumber,
   IsInt,
   IsPositive,
   MinLength,
@@ -10,7 +11,10 @@ import {
   IsArray,
   Min,
   Max,
+  IsUUID,
+  IsNotEmpty,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export enum RoomStatus {
   AVAILABLE = 'available',
@@ -18,19 +22,26 @@ export enum RoomStatus {
   CLEANING = 'cleaning',
 }
 
-export class EditRoomDto {
+export class CreateRoomDto {
+  @ApiProperty({
+    description: 'Hotel ID that this room belongs to',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsUUID()
+  @IsNotEmpty()
+  hotel_id: string;
+
   @ApiProperty({
     description: 'Room name',
     example: 'Y1A',
-    required: false,
     minLength: 1,
     maxLength: 50,
   })
-  @IsOptional()
   @IsString()
+  @IsNotEmpty()
   @MinLength(1, { message: 'name must be at least 1 character long' })
   @MaxLength(50, { message: 'name must not exceed 50 characters' })
-  name?: string;
+  name: string;
 
   @ApiProperty({
     description: 'Room description',
@@ -70,65 +81,58 @@ export class EditRoomDto {
   @ApiProperty({
     description: 'Base price per night in Euros (for website/direct bookings)',
     example: 120.0,
-    required: false,
     minimum: 1,
     maximum: 100000,
   })
-  @IsOptional()
-  @IsInt({ message: 'base_price must be an integer' })
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive({ message: 'base_price must be a positive number' })
-  @Min(100, { message: 'base_price must be at least 1 Euro' })
-  @Max(10000000, {
-    message: 'base_price must not exceed 100000 Euros',
-  })
-  base_price?: number;
+  @Min(1, { message: 'base_price must be at least 1 Euro' })
+  @Max(100000, { message: 'base_price must not exceed 100000 Euros' })
+  @Type(() => Number)
+  base_price: number;
 
   @ApiProperty({
     description:
       'Airbnb price per night in Euros (optional - defaults to base_price if not set)',
-    example: 130.0,
+    example: 134.4,
     required: false,
     minimum: 1,
     maximum: 100000,
   })
   @IsOptional()
-  @IsInt({ message: 'airbnb_price must be an integer' })
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive({ message: 'airbnb_price must be a positive number' })
-  @Min(100, { message: 'airbnb_price must be at least 1 Euro' })
-  @Max(10000000, {
-    message: 'airbnb_price must not exceed 100000 Euros',
-  })
+  @Min(1, { message: 'airbnb_price must be at least 1 Euro' })
+  @Max(100000, { message: 'airbnb_price must not exceed 100000 Euros' })
+  @Type(() => Number)
   airbnb_price?: number;
 
   @ApiProperty({
     description:
       'Booking.com price per night in Euros (optional - defaults to base_price if not set)',
-    example: 140.0,
+    example: 140.4,
     required: false,
     minimum: 1,
     maximum: 100000,
   })
   @IsOptional()
-  @IsInt({ message: 'booking_com_price must be an integer' })
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive({ message: 'booking_com_price must be a positive number' })
-  @Min(100, { message: 'booking_com_price must be at least 1 Euro' })
-  @Max(10000000, {
-    message: 'booking_com_price must not exceed 100000 Euros',
-  })
+  @Min(1, { message: 'booking_com_price must be at least 1 Euro' })
+  @Max(100000, { message: 'booking_com_price must not exceed 100000 Euros' })
+  @Type(() => Number)
   booking_com_price?: number;
 
   @ApiProperty({
     description: 'Maximum guest capacity',
     example: 2,
-    required: false,
     minimum: 1,
     maximum: 20,
   })
-  @IsOptional()
   @IsInt({ message: 'max_capacity must be an integer' })
   @Min(1, { message: 'max_capacity must be at least 1' })
   @Max(20, { message: 'max_capacity must not exceed 20' })
-  max_capacity?: number;
+  max_capacity: number;
 
   @ApiProperty({
     description: 'Room status',
@@ -171,11 +175,10 @@ export class EditRoomDto {
     maximum: 10000,
   })
   @IsOptional()
-  @IsInt({ message: 'pet_fee must be an integer' })
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0, { message: 'pet_fee must be at least 0' })
-  @Max(1000000, {
-    message: 'pet_fee must not exceed 10000 Euros',
-  })
+  @Max(10000, { message: 'pet_fee must not exceed 10000 Euros' })
+  @Type(() => Number)
   pet_fee?: number;
 
   @ApiProperty({
@@ -199,20 +202,25 @@ export class EditRoomDto {
     maximum: 10000,
   })
   @IsOptional()
-  @IsInt({ message: 'cleaning_fee must be an integer' })
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0, { message: 'cleaning_fee must be at least 0' })
-  @Max(1000000, {
-    message: 'cleaning_fee must not exceed 10000 Euros',
-  })
+  @Max(10000, { message: 'cleaning_fee must not exceed 10000 Euros' })
+  @Type(() => Number)
   cleaning_fee?: number;
 }
 
-export class EditRoomResponseDto {
+export class CreateRoomResponseDto {
   @ApiProperty({
     description: 'Room ID',
-    example: 'room-uuid',
+    example: '123e4567-e89b-12d3-a456-426614174000',
   })
   id: string;
+
+  @ApiProperty({
+    description: 'Hotel ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  hotel_id: string;
 
   @ApiProperty({
     description: 'Room name',
@@ -239,21 +247,21 @@ export class EditRoomResponseDto {
   bed_setup: string;
 
   @ApiProperty({
-    description: 'Base price per night in Euros (for website/direct bookings)',
+    description: 'Base price per night in Euros',
     example: 120.0,
   })
   base_price: number;
 
   @ApiProperty({
     description: 'Airbnb price per night in Euros',
-    example: 130.0,
+    example: 134.4,
     nullable: true,
   })
   airbnb_price?: number;
 
   @ApiProperty({
     description: 'Booking.com price per night in Euros',
-    example: 140.0,
+    example: 140.4,
     nullable: true,
   })
   booking_com_price?: number;
@@ -305,8 +313,15 @@ export class EditRoomResponseDto {
   cleaning_fee?: number;
 
   @ApiProperty({
-    description: 'Last update timestamp',
+    description: 'Array of uploaded image URLs',
+    example: ['/uploads/rooms/image1.jpg', '/uploads/rooms/image2.jpg'],
+    type: [String],
+  })
+  image_urls: string[];
+
+  @ApiProperty({
+    description: 'Creation timestamp',
     example: '2024-01-10T10:30:00.000Z',
   })
-  updated_at: string;
+  created_at: string;
 }

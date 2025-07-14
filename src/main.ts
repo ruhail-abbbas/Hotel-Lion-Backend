@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { ValidationPipe } from '@nestjs/common';
+import { PerformanceInterceptor } from './monitoring/performance.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -18,6 +19,11 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Global performance monitoring
+  const performanceInterceptor = app.get(PerformanceInterceptor);
+  app.useGlobalInterceptors(performanceInterceptor);
+
 
   // Serve static files from uploads directory
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
@@ -59,6 +65,8 @@ async function bootstrap() {
     .addTag('Rooms', 'Room inventory and availability')
     .addTag('Bookings', 'Reservation management')
     .addTag('Payments', 'Payment processing')
+    .addTag('Rate Rules', 'Premium pricing rules management')
+    .addTag('Monitoring', 'Performance monitoring and metrics')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
