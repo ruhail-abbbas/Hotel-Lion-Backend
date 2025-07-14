@@ -15,7 +15,8 @@
       "Bash(timeout:*)",
       "Bash(pnpm prisma:*)",
       "Bash(npx prisma db pull:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(gh pr:*)"
 
     ],
     "deny": []
