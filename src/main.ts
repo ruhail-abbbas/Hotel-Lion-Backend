@@ -34,7 +34,8 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000', // Frontend Next.js
       'http://localhost:8000', // Allow same origin
-      /^https:\/\/hotel-lion-frontend-[a-zA-Z0-9]+-abbbas-projects\.vercel\.app$/, // Vercel deployment
+      /^https:\/\/hotel-lion-frontend-[a-zA-Z0-9]+-abbbas-projects\.vercel\.app$/,
+      'https://hotel-lion-frontend.vercel.app/'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
