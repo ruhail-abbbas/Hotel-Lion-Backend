@@ -2492,6 +2492,215 @@
           "Rate Rules"
         ]
       }
+    },
+    "/api/v1/admin/monitoring/performance/overview": {
+      "get": {
+        "description": "Get overall performance metrics and health status",
+        "operationId": "MonitoringController_getPerformanceOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Performance overview retrieved successfully"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get performance overview (Admin only)",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/admin/monitoring/performance/operations": {
+      "get": {
+        "description": "Get list of slowest operations with performance statistics",
+        "operationId": "MonitoringController_getSlowestOperations",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of operations to return",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "timeWindowMinutes",
+            "required": false,
+            "in": "query",
+            "description": "Time window in minutes",
+            "schema": {
+              "example": 60,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Slowest operations retrieved successfully"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get slowest operations (Admin only)",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/admin/monitoring/performance/endpoints": {
+      "get": {
+        "description": "Get performance statistics for all API endpoints",
+        "operationId": "MonitoringController_getEndpointStats",
+        "parameters": [
+          {
+            "name": "timeWindowMinutes",
+            "required": false,
+            "in": "query",
+            "description": "Time window in minutes",
+            "schema": {
+              "example": 60,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Endpoint statistics retrieved successfully"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get endpoint performance statistics (Admin only)",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/admin/monitoring/performance/operation/{operation}": {
+      "get": {
+        "description": "Get detailed performance statistics for a specific operation",
+        "operationId": "MonitoringController_getOperationStats",
+        "parameters": [
+          {
+            "name": "operation",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "timeWindowMinutes",
+            "required": false,
+            "in": "query",
+            "description": "Time window in minutes",
+            "schema": {
+              "example": 60,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation statistics retrieved successfully"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get specific operation performance (Admin only)",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/admin/monitoring/database/metrics": {
+      "get": {
+        "description": "Get Prisma database performance metrics and statistics",
+        "operationId": "MonitoringController_getDatabaseMetrics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Database metrics retrieved successfully"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get database performance metrics (Admin only)",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/admin/monitoring/health": {
+      "get": {
+        "description": "Get overall system health including performance and database status",
+        "operationId": "MonitoringController_getHealthStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Health status retrieved successfully"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get system health status (Admin only)",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/admin/monitoring/cleanup": {
+      "get": {
+        "description": "Remove old performance metrics to free up memory",
+        "operationId": "MonitoringController_cleanupMetrics",
+        "parameters": [
+          {
+            "name": "olderThanHours",
+            "required": false,
+            "in": "query",
+            "description": "Remove metrics older than this many hours",
+            "schema": {
+              "example": 24,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cleanup completed successfully"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Cleanup old performance metrics (Admin only)",
+        "tags": [
+          "Monitoring"
+        ]
+      }
     }
   },
   "info": {
@@ -2528,6 +2737,14 @@
     {
       "name": "Payments",
       "description": "Payment processing"
+    },
+    {
+      "name": "Rate Rules",
+      "description": "Premium pricing rules management"
+    },
+    {
+      "name": "Monitoring",
+      "description": "Performance monitoring and metrics"
     }
   ],
   "servers": [],
@@ -2576,6 +2793,7 @@
             "type": "string",
             "enum": [
               "admin",
+              "staff",
               "cleaning"
             ]
           },
@@ -2586,6 +2804,9 @@
           "updated_at": {
             "format": "date-time",
             "type": "string"
+          },
+          "hotel_id": {
+            "type": "string"
           }
         },
         "required": [
@@ -2594,7 +2815,8 @@
           "phone",
           "role",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "hotel_id"
         ]
       },
       "AuthResponseDto": {
@@ -2647,6 +2869,7 @@
             "description": "User role",
             "enum": [
               "admin",
+              "staff",
               "cleaning"
             ],
             "example": "admin"
@@ -2687,6 +2910,7 @@
             "description": "User role",
             "enum": [
               "admin",
+              "staff",
               "cleaning"
             ],
             "example": "cleaning"

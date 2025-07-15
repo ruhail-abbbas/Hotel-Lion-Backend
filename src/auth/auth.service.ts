@@ -32,6 +32,17 @@ export class AuthService {
   }
 
   async signIn(user: User): Promise<AuthResponseDto> {
+    const userWithHotel = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      include: {
+        hotel_users: {
+          include: {
+            hotel: true,
+          },
+        },
+      },
+    });
+
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -47,6 +58,7 @@ export class AuthService {
       role: user.role,
       created_at: user.created_at,
       updated_at: user.updated_at,
+      hotel_id: userWithHotel?.hotel_users[0]?.hotel_id || '',
     };
 
     return {
@@ -118,6 +130,7 @@ export class AuthService {
       role: user.role,
       created_at: user.created_at,
       updated_at: user.updated_at,
+      hotel_id: user.hotel_users[0]?.hotel_id || '',
     };
   }
 

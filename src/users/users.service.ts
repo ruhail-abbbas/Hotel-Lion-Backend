@@ -62,6 +62,7 @@ export class UsersService {
       role: user.role,
       created_at: user.created_at,
       updated_at: user.updated_at,
+      hotel_id: createUserDto.hotel_id,
     };
   }
 
@@ -88,6 +89,7 @@ export class UsersService {
           role: user.role,
           created_at: user.created_at,
           updated_at: user.updated_at,
+          hotel_id: user.hotel_users[0]?.hotel_id || '',
         }) as UserResponseDto,
     );
   }
@@ -115,6 +117,7 @@ export class UsersService {
       role: user.role,
       created_at: user.created_at,
       updated_at: user.updated_at,
+      hotel_id: user.hotel_users[0]?.hotel_id || '',
     };
   }
 
@@ -164,6 +167,13 @@ export class UsersService {
     const user = await this.prisma.user.update({
       where: { id },
       data: updateData,
+      include: {
+        hotel_users: {
+          include: {
+            hotel: true,
+          },
+        },
+      },
     });
 
     return {
@@ -173,6 +183,7 @@ export class UsersService {
       role: user.role,
       created_at: user.created_at,
       updated_at: user.updated_at,
+      hotel_id: user.hotel_users[0]?.hotel_id || '',
     };
   }
 

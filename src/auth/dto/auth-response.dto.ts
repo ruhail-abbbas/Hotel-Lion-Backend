@@ -19,6 +19,9 @@ export class UserResponseDto {
 
   @ApiProperty()
   updated_at: Date;
+
+  @ApiProperty()
+  hotel_id: string;
 }
 
 export class AuthResponseDto {

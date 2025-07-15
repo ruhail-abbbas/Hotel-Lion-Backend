@@ -173,7 +173,10 @@ export class MonitoringController {
     const memoryUsage = this.performanceService.getMemoryUsage();
 
     // Test database connection
-    let databaseHealth: { isHealthy: boolean; error: string | null } = { isHealthy: true, error: null };
+    let databaseHealth: { isHealthy: boolean; error: string | null } = {
+      isHealthy: true,
+      error: null,
+    };
     try {
       await this.prismaService.$queryRaw`SELECT 1`;
     } catch (error) {

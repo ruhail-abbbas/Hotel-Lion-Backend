@@ -231,16 +231,18 @@ export class RoomsService {
           id: room.id,
 
           base_price: this.parseDecimalToFloat(room.base_price),
-          airbnb_price: room.airbnb_price !== null && room.airbnb_price !== undefined
-            ? this.parseDecimalToFloat(room.airbnb_price)
-            : undefined,
-          booking_com_price: room.booking_com_price !== null && room.booking_com_price !== undefined
-            ? this.parseDecimalToFloat(room.booking_com_price)
-            : undefined,
+          airbnb_price:
+            room.airbnb_price !== null && room.airbnb_price !== undefined
+              ? this.parseDecimalToFloat(room.airbnb_price)
+              : undefined,
+          booking_com_price:
+            room.booking_com_price !== null &&
+            room.booking_com_price !== undefined
+              ? this.parseDecimalToFloat(room.booking_com_price)
+              : undefined,
           rate_rules: room.rate_rules.map((rule) => ({
             ...rule,
             price_per_night: this.parseDecimalToFloat(rule.price_per_night),
-
           })),
         },
         today,
@@ -257,12 +259,10 @@ export class RoomsService {
         bed_setup: room.bed_setup || '',
         base_price: todayPrice,
         airbnb_price: room.airbnb_price
-
           ? this.parseDecimalToFloat(room.airbnb_price)
           : undefined,
         booking_com_price: room.booking_com_price
           ? this.parseDecimalToFloat(room.booking_com_price)
-
           : undefined,
         max_capacity: room.max_capacity,
         amenities: room.amenities || [],
@@ -598,12 +598,15 @@ export class RoomsService {
           id: room.id,
 
           base_price: this.parseDecimalToFloat(room.base_price),
-          airbnb_price: room.airbnb_price !== null && room.airbnb_price !== undefined
-            ? this.parseDecimalToFloat(room.airbnb_price)
-            : undefined,
-          booking_com_price: room.booking_com_price !== null && room.booking_com_price !== undefined
-            ? this.parseDecimalToFloat(room.booking_com_price)
-            : undefined,
+          airbnb_price:
+            room.airbnb_price !== null && room.airbnb_price !== undefined
+              ? this.parseDecimalToFloat(room.airbnb_price)
+              : undefined,
+          booking_com_price:
+            room.booking_com_price !== null &&
+            room.booking_com_price !== undefined
+              ? this.parseDecimalToFloat(room.booking_com_price)
+              : undefined,
 
           rate_rules: room.rate_rules.map((rule) => ({
             ...rule,
@@ -618,15 +621,16 @@ export class RoomsService {
       // Get platform-specific price for display
       const platformPrice = this.getPlatformPrice(
         {
-
           base_price: this.parseDecimalToFloat(room.base_price),
-          airbnb_price: room.airbnb_price !== null && room.airbnb_price !== undefined
-            ? this.parseDecimalToFloat(room.airbnb_price)
-            : undefined,
-          booking_com_price: room.booking_com_price !== null && room.booking_com_price !== undefined
-            ? this.parseDecimalToFloat(room.booking_com_price)
-            : undefined,
-
+          airbnb_price:
+            room.airbnb_price !== null && room.airbnb_price !== undefined
+              ? this.parseDecimalToFloat(room.airbnb_price)
+              : undefined,
+          booking_com_price:
+            room.booking_com_price !== null &&
+            room.booking_com_price !== undefined
+              ? this.parseDecimalToFloat(room.booking_com_price)
+              : undefined,
         },
         platform,
       );
@@ -639,12 +643,10 @@ export class RoomsService {
         bed_setup: room.bed_setup || '',
         base_price: platform ? platformPrice : basePrice,
         airbnb_price: room.airbnb_price
-
           ? this.parseDecimalToFloat(room.airbnb_price)
           : undefined,
         booking_com_price: room.booking_com_price
           ? this.parseDecimalToFloat(room.booking_com_price)
-
           : undefined,
         total_cost: totalCost,
         nights: nights,
@@ -688,7 +690,6 @@ export class RoomsService {
     checkOut: Date,
     platform?: string,
   ): { totalCost: number; basePrice: number } {
-
     const startTime = Date.now();
     // Early return for simple case
 
@@ -699,12 +700,15 @@ export class RoomsService {
       const platformBasePrice = this.getPlatformPrice(
         {
           base_price: this.parseDecimalToFloat(room.base_price),
-          airbnb_price: room.airbnb_price !== null && room.airbnb_price !== undefined
-            ? this.parseDecimalToFloat(room.airbnb_price)
-            : undefined,
-          booking_com_price: room.booking_com_price !== null && room.booking_com_price !== undefined
-            ? this.parseDecimalToFloat(room.booking_com_price)
-            : undefined,
+          airbnb_price:
+            room.airbnb_price !== null && room.airbnb_price !== undefined
+              ? this.parseDecimalToFloat(room.airbnb_price)
+              : undefined,
+          booking_com_price:
+            room.booking_com_price !== null &&
+            room.booking_com_price !== undefined
+              ? this.parseDecimalToFloat(room.booking_com_price)
+              : undefined,
         },
         platform,
       );

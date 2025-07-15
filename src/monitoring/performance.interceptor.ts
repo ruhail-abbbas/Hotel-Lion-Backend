@@ -45,7 +45,7 @@ export class PerformanceInterceptor implements NestInterceptor {
               ip: request.ip,
               // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
               queryParams: Object.keys(request.query || {}).length,
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               bodySize: request.headers?.['content-length']
                 ? // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                   parseInt(request.headers['content-length'])

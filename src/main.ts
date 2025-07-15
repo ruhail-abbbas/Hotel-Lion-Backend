@@ -24,7 +24,6 @@ async function bootstrap() {
   const performanceInterceptor = app.get(PerformanceInterceptor);
   app.useGlobalInterceptors(performanceInterceptor);
 
-
   // Serve static files from uploads directory
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
