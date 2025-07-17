@@ -276,6 +276,15 @@ export class RoomsService {
           image_url: photo.image_url,
           sort_order: photo.sort_order,
         })),
+        rate_rules: room.rate_rules.map((rule) => ({
+          id: rule.id,
+          start_date: rule.start_date.toISOString().split('T')[0],
+          end_date: rule.end_date.toISOString().split('T')[0],
+          price_per_night: this.parseDecimalToFloat(rule.price_per_night),
+          min_stay_nights: rule.min_stay_nights ?? undefined,
+          day_of_week: rule.day_of_week,
+          source: rule.source ?? undefined,
+        })),
       };
     });
 

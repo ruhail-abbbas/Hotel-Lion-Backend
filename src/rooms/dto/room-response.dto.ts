@@ -1,5 +1,52 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class RateRuleDto {
+  @ApiProperty({
+    description: 'Rate rule ID',
+    example: 'rate-rule-uuid',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'Start date of the rate rule',
+    example: '2024-12-20',
+  })
+  start_date: string;
+
+  @ApiProperty({
+    description: 'End date of the rate rule',
+    example: '2024-12-31',
+  })
+  end_date: string;
+
+  @ApiProperty({
+    description: 'Premium price per night in Euros',
+    example: 50.0,
+  })
+  price_per_night: number;
+
+  @ApiProperty({
+    description: 'Minimum stay nights required for this rate rule',
+    example: 3,
+    nullable: true,
+  })
+  min_stay_nights?: number;
+
+  @ApiProperty({
+    description:
+      'Days of the week this rule applies to (0=Sunday, 1=Monday, ..., 6=Saturday)',
+    example: [5, 6],
+  })
+  day_of_week: number[];
+
+  @ApiProperty({
+    description: 'Source/platform this rule applies to',
+    example: 'website',
+    nullable: true,
+  })
+  source?: string;
+}
+
 export class RoomPhotoDto {
   @ApiProperty({
     description: 'Photo ID',
@@ -115,6 +162,12 @@ export class RoomListDto {
     type: [RoomPhotoDto],
   })
   photos: RoomPhotoDto[];
+
+  @ApiProperty({
+    description: 'Rate rules for premium pricing',
+    type: [RateRuleDto],
+  })
+  rate_rules: RateRuleDto[];
 }
 
 export class RoomsListResponseDto {

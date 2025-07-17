@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -9,6 +9,7 @@ import { CleaningService } from './cleaning.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CleaningStaffResponseDto } from './dto/cleaning-staff-response.dto';
 
 @ApiTags('Cleaning')
 @Controller('api/v1/admin/cleaning')
@@ -16,6 +17,34 @@ import { Roles } from '../auth/decorators/roles.decorator';
 @ApiBearerAuth()
 export class CleaningController {
   constructor(private readonly cleaningService: CleaningService) {}
+
+  @Get('staff')
+  @Roles('admin')
+  @ApiOperation({
+    summary: 'Get all cleaning staff members',
+    description:
+      'Retrieve a list of all cleaning staff members with their contact information for admin management.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of cleaning staff members retrieved successfully',
+    type: CleaningStaffResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - JWT token required',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
+  })
+  async getCleaningStaff(): Promise<CleaningStaffResponseDto> {
+    const staff = await this.cleaningService.getAllCleaningStaff();
+    return {
+      staff,
+      total: staff.length,
+    };
+  }
 
   @Post('send-notifications')
   @Roles('admin')

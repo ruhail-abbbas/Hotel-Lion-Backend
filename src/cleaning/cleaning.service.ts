@@ -103,7 +103,7 @@ export class CleaningService {
     }
   }
 
-  private async getCleaningStaff(): Promise<
+  async getCleaningStaff(): Promise<
     { id: string; email: string; phone: string }[]
   > {
     try {
@@ -116,6 +116,9 @@ export class CleaningService {
           email: true,
           phone: true,
         },
+        orderBy: {
+          email: 'asc',
+        },
       });
 
       return cleaningStaff.filter(
@@ -125,6 +128,38 @@ export class CleaningService {
     } catch (error) {
       this.logger.error(
         'Error fetching cleaning staff:',
+        error instanceof Error ? error.message : String(error),
+      );
+      return [];
+    }
+  }
+
+  async getAllCleaningStaff(): Promise<
+    { id: string; email: string; phone: string }[]
+  > {
+    try {
+      const cleaningStaff = await this.prisma.user.findMany({
+        where: {
+          role: UserRole.cleaning,
+        },
+        select: {
+          id: true,
+          email: true,
+          phone: true,
+        },
+        orderBy: {
+          email: 'asc',
+        },
+      });
+
+      return cleaningStaff.map((staff) => ({
+        id: staff.id,
+        email: staff.email,
+        phone: staff.phone || '',
+      }));
+    } catch (error) {
+      this.logger.error(
+        'Error fetching all cleaning staff:',
         error instanceof Error ? error.message : String(error),
       );
       return [];

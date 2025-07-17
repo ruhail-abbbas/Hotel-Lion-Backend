@@ -618,12 +618,12 @@ export class StatsService {
     hotelId: string,
     date?: string,
   ): Promise<CheckOutsTodayDto> {
-    const targetDate = date ? new Date(date) : new Date();
+    const targetDate = date ? new Date(date + 'T00:00:00.000Z') : new Date();
     const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
+    startOfDay.setUTCHours(0, 0, 0, 0);
 
     const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    endOfDay.setUTCHours(23, 59, 59, 999);
 
     const checkOutBookings = await this.prisma.booking.findMany({
       where: {

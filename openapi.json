@@ -1990,6 +1990,40 @@
         ]
       }
     },
+    "/api/v1/admin/cleaning/staff": {
+      "get": {
+        "description": "Retrieve a list of all cleaning staff members with their contact information for admin management.",
+        "operationId": "CleaningController_getCleaningStaff",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of cleaning staff members retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CleaningStaffResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT token required"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all cleaning staff members",
+        "tags": [
+          "Cleaning"
+        ]
+      }
+    },
     "/api/v1/admin/cleaning/send-notifications": {
       "post": {
         "description": "Manually trigger cleaning notifications for today's checkouts. Useful for testing or sending notifications outside the scheduled time.",
@@ -3834,6 +3868,63 @@
           "sort_order"
         ]
       },
+      "RateRuleDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Rate rule ID",
+            "example": "rate-rule-uuid"
+          },
+          "start_date": {
+            "type": "string",
+            "description": "Start date of the rate rule",
+            "example": "2024-12-20"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "End date of the rate rule",
+            "example": "2024-12-31"
+          },
+          "price_per_night": {
+            "type": "number",
+            "description": "Premium price per night in Euros",
+            "example": 50
+          },
+          "min_stay_nights": {
+            "type": "number",
+            "description": "Minimum stay nights required for this rate rule",
+            "example": 3,
+            "nullable": true
+          },
+          "day_of_week": {
+            "description": "Days of the week this rule applies to (0=Sunday, 1=Monday, ..., 6=Saturday)",
+            "example": [
+              5,
+              6
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "source": {
+            "type": "string",
+            "description": "Source/platform this rule applies to",
+            "example": "website",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "start_date",
+          "end_date",
+          "price_per_night",
+          "min_stay_nights",
+          "day_of_week",
+          "source"
+        ]
+      },
       "RoomListDto": {
         "type": "object",
         "properties": {
@@ -3919,6 +4010,13 @@
             "items": {
               "$ref": "#/components/schemas/RoomPhotoDto"
             }
+          },
+          "rate_rules": {
+            "description": "Rate rules for premium pricing",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RateRuleDto"
+            }
           }
         },
         "required": [
@@ -3935,7 +4033,8 @@
           "pet_fee",
           "minimum_nights",
           "cleaning_fee",
-          "photos"
+          "photos",
+          "rate_rules"
         ]
       },
       "RoomsListResponseDto": {
@@ -5348,6 +5447,52 @@
           "managers",
           "staff",
           "stats"
+        ]
+      },
+      "CleaningStaffDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the cleaning staff member",
+            "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address of the cleaning staff member",
+            "example": "cleaner@hotel-lion.com"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Phone number for WhatsApp notifications",
+            "example": "+1234567890"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "phone"
+        ]
+      },
+      "CleaningStaffResponseDto": {
+        "type": "object",
+        "properties": {
+          "staff": {
+            "description": "List of cleaning staff members",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CleaningStaffDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of cleaning staff members",
+            "example": 3
+          }
+        },
+        "required": [
+          "staff",
+          "total"
         ]
       },
       "CreateCheckoutWithBookingDto": {

@@ -110,6 +110,7 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 - `POST /api/v1/whatsapp/send-message` – Send WhatsApp message via Twilio
 
 ### Cleaning Management ✅ *NEW*
+- `GET /api/v1/admin/cleaning/staff` – Get list of all cleaning staff members
 - `POST /api/v1/admin/cleaning/send-notifications` – Manually trigger cleaning notifications
 
 ### Rate Rules Management (Admin only) ✅ *NEW*
