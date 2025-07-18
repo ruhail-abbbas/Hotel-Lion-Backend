@@ -31,6 +31,7 @@ import {
 } from './dto/upload-room-image.dto';
 import { promises as fs } from 'fs';
 import { join } from 'path';
+import { ConfigService } from '@nestjs/config';
 
 // Define types for room with rate rules
 type RoomWithRateRules = {
@@ -78,10 +79,22 @@ export class RoomsService {
     private prisma: PrismaService,
     private airbnbService: AirbnbService,
     private performanceService: PerformanceService,
+    private configService: ConfigService,
   ) {}
 
   private parseDecimalToFloat(value: number | { toString(): string }): number {
     return typeof value === 'number' ? value : parseFloat(value.toString());
+  }
+
+  /**
+   * Generate absolute URL for uploaded images
+   * @param relativePath - Relative path like '/uploads/rooms/image.jpg'
+   * @returns Absolute URL accessible to frontend
+   */
+  private generateAbsoluteImageUrl(relativePath: string): string {
+    const baseUrl =
+      this.configService.get<string>('BASE_URL') || 'http://localhost:8000';
+    return `${baseUrl}${relativePath}`;
   }
 
   async createRoom(
@@ -141,17 +154,18 @@ export class RoomsService {
         if (files && files.length > 0) {
           for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const imageUrl = `/uploads/rooms/${file.filename}`;
+            const relativePath = `/uploads/rooms/${file.filename}`;
+            const absoluteUrl = this.generateAbsoluteImageUrl(relativePath);
 
             await prisma.roomPhoto.create({
               data: {
                 room_id: room.id,
-                image_url: imageUrl,
+                image_url: relativePath, // Store relative path in DB
                 sort_order: i + 1,
               },
             });
 
-            imageUrls.push(imageUrl);
+            imageUrls.push(absoluteUrl); // Return absolute URL to frontend
           }
         }
 
@@ -273,7 +287,7 @@ export class RoomsService {
           : undefined,
         photos: room.room_photos.map((photo) => ({
           id: photo.id,
-          image_url: photo.image_url,
+          image_url: this.generateAbsoluteImageUrl(photo.image_url),
           sort_order: photo.sort_order,
         })),
         rate_rules: room.rate_rules.map((rule) => ({
@@ -372,6 +386,7 @@ export class RoomsService {
       startDate,
       endDate,
     );
+    console.log(roomsWithAirbnb);
 
     // Transform the data to match our DTO
     const roomsCalendar: RoomCalendarDto[] = roomsWithAirbnb.map((room) => ({
@@ -668,7 +683,7 @@ export class RoomsService {
           : undefined,
         photos: room.room_photos.map((photo) => ({
           id: photo.id,
-          image_url: photo.image_url,
+          image_url: this.generateAbsoluteImageUrl(photo.image_url),
           sort_order: photo.sort_order,
         })),
       });
@@ -1031,7 +1046,7 @@ export class RoomsService {
     return {
       id: photo.id,
       room_id: photo.room_id,
-      image_url: photo.image_url,
+      image_url: this.generateAbsoluteImageUrl(photo.image_url),
       sort_order: photo.sort_order,
     };
   }
@@ -1108,7 +1123,7 @@ export class RoomsService {
     return {
       id: updatedPhoto.id,
       room_id: updatedPhoto.room_id,
-      image_url: updatedPhoto.image_url,
+      image_url: this.generateAbsoluteImageUrl(updatedPhoto.image_url),
       sort_order: updatedPhoto.sort_order,
     };
   }
