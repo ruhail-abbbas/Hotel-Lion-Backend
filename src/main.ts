@@ -27,7 +27,7 @@ async function bootstrap() {
   // Serve static files from uploads directory
   // In production (dist/), __dirname is dist/src, so go up two levels to project root
   // In development, __dirname is src, so go up one level to project root
-  const uploadsPath = process.env.NODE_ENV === 'production' 
+  const uploadsPath = process.env.APP_ENV === 'production' 
     ? join(__dirname, '..', '..', 'uploads')
     : join(__dirname, '..', 'uploads');
   
