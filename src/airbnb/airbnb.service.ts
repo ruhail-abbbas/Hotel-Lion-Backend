@@ -49,7 +49,6 @@ export class AirbnbService {
 
       this.logger.log(`Fetching calendar data for URL: ${requestDto.url}`);
 
-      // Run the actor and get dataset items
       const response = await fetch(
         `${this.apifyApiUrl}/acts/${this.actorId}/run-sync-get-dataset-items?token=${apifyToken}`,
         {
