@@ -14,7 +14,7 @@ NestJS backend for Hotel Lion - a boutique hotel (max 16 rooms) PMS with channel
 🚧 **Database Ready**: Rooms, Bookings, Payments, Admin Dashboard, Channel Integration  
 ❌ **Not Started**: Public booking flow, Payment processing, Channel sync, Registration forms
 
-## Development Commands
+## Development Commands.
 
 * `pnpm run start:dev` – Dev server with hot reload
 * `pnpm run build` – Production build
