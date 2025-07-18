@@ -25,7 +25,13 @@ async function bootstrap() {
   app.useGlobalInterceptors(performanceInterceptor);
 
   // Serve static files from uploads directory
-  app.useStaticAssets(join(__dirname, '..', '..', 'uploads'), {
+  // In production (dist/), __dirname is dist/src, so go up two levels to project root
+  // In development, __dirname is src, so go up one level to project root
+  const uploadsPath = process.env.NODE_ENV === 'production' 
+    ? join(__dirname, '..', '..', 'uploads')
+    : join(__dirname, '..', 'uploads');
+  
+  app.useStaticAssets(uploadsPath, {
     prefix: '/uploads/',
   });
 
